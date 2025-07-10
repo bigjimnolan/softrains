@@ -1,0 +1,44 @@
+{
+  "FrigateService": {
+    "FrigateTopics": [
+      "frigate/events",
+      "frigate/tracked_object_update"
+    ],
+    "MqttPort": "1883",
+    "MqttURL": "tcp://localhost"
+  },
+  "HubitatConfig": {
+    "ActionsListLocation": "/app/config/actions.json",
+    "DeviceBackoffEnabled": true,
+    "HubitatDevices": {
+      "101": {
+        "APIId": 200,
+        "DeviceBackoff": 2,
+        "DeviceId": 101,
+        "DeviceURL": "https://hubitat.local/api/200/devices/101/<action>?access_token=<access_token>",
+        "PostBody": null
+      },
+      "102": {
+        "APIId": 200,
+        "DeviceBackoff": 3,
+        "DeviceId": 102,
+        "DeviceURL": "https://hubitat.local/api/200/devices/102/<action>?access_token=<access_token>",
+        "PostBody": null
+      }
+    },
+    "TimeoutSeconds": 15
+  },
+  "LogLevel": "info",
+  "MQTTService": {
+    "Address": ":1883",
+    "ID": "softrains-mqtt"
+  },
+  "UIService": {
+    "ActionsPath": "/app/config/actions.json",
+    "ConfigPath": "/app/config/softrains-demo.json",
+    "ServerCertPath": "/etc/ssl/certs/demo.crt",
+    "ServerKeyPath": "/etc/ssl/private/demo.key",
+    "TLSListenPort": "8443",
+    "WebFolderDocRoot": "/app/ui/"
+  }
+}

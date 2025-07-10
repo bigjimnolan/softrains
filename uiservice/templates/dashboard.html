@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SoftRains UI Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/ui.js"></script>
+  <style>
+    table { border-collapse: collapse; width: 100%; margin-bottom: 2em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
+    th { background: #f0f0f0; }
+    .actions { white-space: nowrap; }
+    .add-btn, .edit-btn, .delete-btn { margin-right: 0.5em; cursor: pointer; }
+    #modal-bg { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000; }
+    #modal-box { background:#fff; padding:2em; margin:5vh auto; width:400px; border-radius:8px; position:relative; }
+    #modal-close { position:absolute; top:0.5em; right:0.5em; cursor:pointer; font-size:1.2em; }
+    #notification { background: #e0ffe0; color: #222; padding: 0.5em 1em; margin-bottom: 1em; border-radius: 4px; display: none; }
+  </style>
+</head>
+<body>
+  <div id="notification"></div>
+
+  <h1>SoftRains Dashboard</h1>
+
+  <h2>
+    Actions
+    <span class="add-btn" onclick="showActionModal('add')">+</span>
+  </h2>
+  <table>
+    <thead>
+      <tr>
+        <th>DeviceID</th>
+        <th>Delay</th>
+        <th>PrimaryAction</th>
+        <th>SecondaryAction</th>
+        <th>CameraSource</th>
+        <th>Backoff</th>
+        <th class="actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Actions}}
+      <tr>
+        <td>{{.DeviceID}}</td>
+        <td>{{.Delay}}</td>
+        <td>{{.PrimaryAction}}</td>
+        <td>{{.SecondaryAction}}</td>
+        <td>{{.CameraSource}}</td>
+        <td>{{.Backoff}}</td>
+        <td class="actions">
+          <span class="edit-btn" onclick="showActionModal('edit', '{{.DeviceID}}', this)">Edit</span>
+          <span class="delete-btn" onclick="deleteAction('{{.DeviceID}}')">Delete</span>
+        </td>
+      </tr>
+      {{else}}
+      <tr><td colspan="7">No actions found.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <h2>
+    Devices
+    <span class="add-btn" onclick="showDeviceModal('add')">+</span>
+  </h2>
+  <table>
+    <thead>
+      <tr>
+        <th>DeviceID</th>
+        <th>APIID</th>
+        <th>DeviceURL</th>
+        <th>DeviceBackoff</th>
+        <th class="actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range $id, $dev := .Devices}}
+      <tr>
+        <td>{{$dev.DeviceID}}</td>
+        <td>{{$dev.APIID}}</td>
+        <td>{{$dev.DeviceURL}}</td>
+        <td>{{$dev.DeviceBackoff}}</td>
+        <td class="actions">
+          <span class="edit-btn" onclick="showDeviceModal('edit', '{{$dev.DeviceID}}', this)">Edit</span>
+          <span class="delete-btn" onclick="deleteDevice('{{$dev.DeviceID}}')">Delete</span>
+        </td>
+      </tr>
+      {{else}}
+      <tr><td colspan="6">No devices found.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <!-- Modal for add/edit -->
+  <div id="modal-bg">
+    <div id="modal-box">
+      <span id="modal-close" onclick="closeModal()">&times;</span>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+</body>
+</html>
