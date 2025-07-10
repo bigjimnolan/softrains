@@ -1,0 +1,58 @@
+[
+  {
+    "deviceId": 101,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "FrontDoor:person",
+    "backoff": 2
+  },
+  {
+    "deviceId": 101,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "FrontDoor:person",
+    "backoff": 2
+  },
+  {
+    "deviceId": 202,
+    "delay": 0,
+    "primaryAction": "open",
+    "secondaryAction": "",
+    "cameraSource": "Garage:car",
+    "backoff": 5
+  },
+  {
+    "deviceId": 202,
+    "delay": 30,
+    "primaryAction": "close",
+    "secondaryAction": "",
+    "cameraSource": "Garage:car",
+    "backoff": 5
+  },
+  {
+    "deviceId": 303,
+    "delay": 0,
+    "primaryAction": "notify",
+    "secondaryAction": "BackYard:dog",
+    "cameraSource": "BackYard:dog",
+    "backoff": 0
+  },
+  {
+    "deviceId": 404,
+    "delay": 10,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "Garden:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 404,
+    "delay": 70,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "Garden:person",
+    "backoff": 1
+  }
+]
