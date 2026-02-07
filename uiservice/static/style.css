@@ -1,3 +1,657 @@
-body { font-family: sans-serif; margin: 2em; }
-form { max-width: 300px; margin: auto; }
-label { display: block; margin-bottom: 1em; }
+/* === Map and Legend Styles === */
+
+.camera-marker {
+  background: #ffb300;
+  border: 2px solid #fffde7;
+  border-radius: 50%;
+  width: 2em;
+  height: 2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2e4053;
+  font-size: 1.5em;
+  box-shadow: 0 2px 8px #bbb4;
+}
+#map {
+  width: 80vw !important;  
+  height: 80vh;  
+  margin: 0 auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+}
+.map-legend {
+  background: rgba(255,255,255,0.95);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px 24px;
+  margin: 12px;
+  font-size: 1rem;
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.legend-section { min-width: 120px; }
+.legend-icon { font-size: 1.5em; margin-right: 0.5em; }
+.legend-label { vertical-align: middle; }
+/* --- Robot Action Icon Styling --- */
+.robot-action-icon {
+  display: block;
+  margin: 0 auto 0.4em auto;
+  font-size: 3.2em;
+  background: linear-gradient(90deg, #e0e0e0 60%, #f5f5f5 100%);
+  border-radius: 2em;
+  padding: 0.15em 0.7em 0.15em 0.7em;
+  box-shadow: 0 2px 8px #bbb4;
+  text-align: center;
+  width: fit-content;
+  min-width: 2.5em;
+}
+
+
+/* === Global Scrollbar Styles: transparent everywhere by default === */
+html, body, * {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+::-webkit-scrollbar {
+  width: 14px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 8px;
+  border: 2px solid transparent;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+h2 {
+   display:flex;
+   align-items:center;
+   gap:8px;
+}
+
+/* === Styled scrollbars for device/activity tables only === */
+.softrains-table-container,
+.activity-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #ffe082 #fffde7;
+}
+.softrains-table-container h2 {
+  overflow: visible;
+}
+
+.softrains-table-container::-webkit-scrollbar,
+.activity-table-container::-webkit-scrollbar {
+  width: 14px;
+  background: transparent;
+}
+.softrains-table-container::-webkit-scrollbar-thumb,
+.activity-table-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ffe082 0%, #ffb300 100%);
+  border-radius: 8px;
+  border: 2px solid #fffde7;
+}
+.softrains-table-container::-webkit-scrollbar-thumb:hover,
+.activity-table-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ffb300 0%, #ffe082 100%);
+}
+.softrains-table-container::-webkit-scrollbar-corner,
+.activity-table-container::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* === Prevent horizontal scroll, always wrap === */
+html, body {
+  overflow-x: hidden;
+  word-break: break-word;
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
+}
+
+
+/* === Responsive font shrinking, min 8pt (10.67px) === */
+html, body {
+  font-size: clamp(10.67px, 1vw, 20px);
+}
+.table th, .table td, .softrains-theme .softrains-table-container th, .softrains-theme .softrains-table-container td {
+  font-size: clamp(10.67px, 1.2vw, 18px) !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* === Base Styles === */
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 2em;
+  color: #2e4053;
+  background: #fff;
+  font-size: clamp(14px, 1.5vw, 20px);
+}
+
+form {
+  max-width: 300px;
+  margin: auto;
+}
+label {
+  display: block;
+  margin-bottom: 1em;
+}
+
+/* Make theme toggle label smaller and subtle */
+.theme-toggle-label {
+  font-size: 0.75em !important;
+  font-weight: normal !important;
+  color: #888 !important;
+  opacity: 0.7;
+  letter-spacing: 0.01em;
+}
+
+#notification {
+  background: #e0ffe0;
+  color: #222;
+  padding: 0.5em 1em;
+  margin-bottom: 1em;
+  border-radius: 4px;
+  display: none;
+}
+
+/* === Table Styles === */
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 2em;
+  table-layout: fixed;
+}
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 0.5em;
+  text-align: left;
+}
+.table th {
+  background: #f0f0f0;
+}
+.table .actions {
+  white-space: nowrap;
+}
+.table .add-btn,
+.table .edit-btn,
+.table .delete-btn {
+  margin-right: 0.5em;
+  cursor: pointer;
+}
+
+/* === Modal Styles === */
+.modal-bg {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+.modal-box {
+  background: #fff;
+  padding: 2em;
+  margin: 5vh auto;
+  width: 400px;
+  border-radius: 8px;
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: 0.5em; right: 0.5em;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+
+/* === SoftRains Theme === */
+body.softrains-theme {
+  background: linear-gradient(135deg, #f9f6e7 0%, #e0f7fa 100%);
+  color: #2e4053;
+  background-image: url('/static/images/softrainsbackgroundresponsive.jpeg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+body.softrains-theme h1 { display: none; }
+
+/* --- Layout --- */
+.softrains-flex-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 100%;
+  height: calc(100vh - 6em);
+  gap: 2vw;
+  margin-top: 2em;
+  min-height: 0;
+  overflow: hidden;
+}
+.softrains-table-container {
+  flex: 0 0 32vw;
+  max-width: 32vw;
+  min-width: 220px;
+  height: 100%;
+  background: rgba(255, 253, 231, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 2px 16px #ffe08244;
+  padding: 1.5em 1em 1em 1em;
+  margin-bottom: 0;
+  margin-top: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* --- Table in Theme --- */
+.softrains-theme .softrains-table-container table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border: 2px solid #ffb300;
+  box-shadow: 0 2px 16px #ffe08244;
+  background: transparent;
+}
+.softrains-theme .softrains-table-container th,
+.softrains-theme .softrains-table-container td {
+  border: 1px solid #ffe082;
+  background: transparent;
+  font-size: clamp(12px, 1.2vw, 18px);
+  line-height: 1.2;
+}
+.softrains-theme .softrains-table-container th {
+  background: #ffe082;
+  color: #2e4053;
+  border-bottom: 2px solid #ffb300;
+}
+.softrains-theme .softrains-table-container .actions span {
+  background: #ffb300;
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.2em 0.6em;
+  font-weight: bold;
+  font-family: 'Segoe UI Symbol', 'Segoe UI', 'Arial', sans-serif;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.softrains-theme .softrains-table-container .actions span:hover {
+  background: #fffde7;
+  color: #ffb300;
+  border: 1px solid #ffb300;
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 0 8px #ffe08299;
+}
+.softrains-theme .add-btn::after { content: " ☀️"; }
+.softrains-theme .edit-btn::after { content: " ✏️"; }
+.softrains-theme .delete-btn::after { content: " 🗑️"; }
+
+/* --- Table Scrollpad --- */
+.scrollpad, th.scrollpad {
+  width: 28px !important;
+  min-width: 24px;
+  max-width: 32px;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* --- Table Cell Types --- */
+.softrains-theme .symbol-id,
+.softrains-theme .enticing-btn,
+.softrains-theme .primary-action,
+.softrains-theme .secondary-action,
+.softrains-theme .camera-source {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 1em;
+  padding: 0.5em 0.2em;
+  background: transparent !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.softrains-theme svg {
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: middle;
+}
+
+/* --- Header Icon --- */
+.header-icon {
+  font-size: 1.5em;
+  display: inline-block;
+  font-weight: bold;
+  padding: 0.1em 0.2em;
+  border-radius: 0.3em;
+  background: #ffe082cc;
+  color: #2e4053;
+  box-shadow: 0 1px 2px #ffe08255;
+  vertical-align: middle;
+  cursor: help;
+  border: 2px solid #ffb300;
+  margin: 0 0.1em;
+}
+
+/* --- Last Trigger --- */
+.softrains-theme .last-trigger {
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  color: #388e3c;
+  background: #e8f5e9;
+  border-radius: 4px;
+  padding: 0.3em 0.7em;
+  display: inline-block;
+  min-width: 2em;
+}
+
+/* --- Symbol/Empty --- */
+.softrains-theme .symbol-timestamp::before { content: "⏳"; margin-right: 0.2em; }
+.softrains-theme .symbol-empty::before { content: "—"; color: #bdbdbd; margin-right: 0.2em; }
+
+/* --- Custom Scrollbars --- */
+.softrains-theme ::-webkit-scrollbar {
+  width: 12px;
+  background: rgba(255, 253, 231, 0.2);
+}
+.softrains-theme ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ffe082 0%, #ffb300 100%);
+  border-radius: 8px;
+  border: 2px solid #fffde7;
+}
+.softrains-theme ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ffb300 0%, #ffe082 100%);
+}
+.softrains-theme ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.softrains-theme {
+  scrollbar-width: thin;
+  scrollbar-color: #ffb300 #fffde7;
+}
+
+/* --- Modal: Detection Zones/Types --- */
+#zone-type-modal {
+  position: fixed;
+  left: 0; top: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#zone-type-modal-box {
+  background: rgba(255, 253, 231, 0.52);
+  border-radius: 1em;
+  padding: 1.2em 1.5em;
+  min-width: 220px;
+  max-width: 95vw;
+  width: auto;
+  box-shadow: 0 2px 16px #ffe08288;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+#zone-type-modal-close {
+  position: absolute;
+  top: 0.5em; right: 1em;
+  font-size: 2em;
+  cursor: pointer;
+}
+#zone-type-list-container {
+  max-height: 40vh;
+  overflow-y: auto;
+  width: 100%;
+  background: rgba(255,255,255,0.35);
+  border-radius: 0.5em;
+  margin-bottom: 0.5em;
+  box-sizing: border-box;
+  padding: 0.2em 0.5em;
+}
+#zone-type-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#zone-type-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.2em;
+  font-size: 1em;
+  padding: 0.1em 0;
+}
+.zone-symbol {
+  font-size: 1.4em;
+  width: 1.6em;
+  text-align: center;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .softrains-flex-row {
+    flex-direction: column;
+    gap: 1em;
+    height: auto;
+  }
+  .softrains-table-container {
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    flex: 1 1 100%;
+    height: 40vh;
+  }
+  .softrains-theme .softrains-table-container th,
+  .softrains-theme .softrains-table-container td {
+    font-size: clamp(10px, 2vw, 14px);
+  }
+  .softrains-theme svg {
+    width: 1.2em;
+    height: 1.2em;
+  }
+}
+@media (max-width: 600px) {
+  body.softrains-theme {
+    font-size: clamp(10px, 4vw, 14px);
+  }
+}
+.dashboard-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1em;
+  width: 100%;
+}
+.dashboard-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+.dashboard-logo {
+  height: 6em; /* Was 3em, now 100% bigger */
+  width: auto;
+  display: block;
+  margin: 0; /* Ensure no extra spacing is added */
+  padding: 0;
+}
+.nav-icons {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5em;
+  height: 2.5em;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+.nav-icon:hover {
+  background: rgba(255, 179, 0, 0.2);
+  transform: translateY(-2px);
+  border-color: #ffb300;
+}
+.nav-icon.active {
+  background: linear-gradient(135deg, #ffe082 0%, #ffb300 100%);
+  border-color: #ffb300;
+  box-shadow: 0 2px 8px rgba(255, 179, 0, 0.3);
+}
+.nav-icon .icon {
+  font-size: 1.5em;
+}
+.theme-toggle-label {
+  font-weight: bold;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  cursor: pointer;
+  user-select: none;
+}
+#theme-toggle {
+  width: 1em;
+  height: 1em;
+  margin-right: 0.3em;
+  accent-color: #ffb300;
+}
+
+/* Transparent table borders for data cells */
+.softrains-theme .table,
+.softrains-theme .table th,
+.softrains-theme .table td {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Table container scrollbars: always visible, transparent, and styled */
+.softrains-table-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Optional: set a max-height if needed */
+  /* max-height: 60vh; */
+}
+
+/* Transparent, styled scrollbars for theme */
+.softrains-theme .softrains-table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #ffe08233 transparent;
+}
+.softrains-theme .softrains-table-container::-webkit-scrollbar {
+  width: 14px;
+  background: transparent;
+}
+.softrains-theme .softrains-table-container::-webkit-scrollbar-thumb {
+  background: #ffe08233;
+  border-radius: 8px;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+}
+.softrains-theme .softrains-table-container::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.theme-toggle-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+#icon-modal-btn {
+  font-size: 1em;
+  background: #ffe082cc;
+  color: #2e4053;
+  border: 1px solid #ffb300;
+  border-radius: 0.4em;
+  padding: 0.3em 1em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+#icon-modal-btn:hover {
+  background: #fffde7;
+  color: #ffb300;
+}
+
+/* === Navigation Slide Toggle === */
+.nav-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.nav-toggle-input {
+  display: none;
+}
+
+.nav-toggle-slider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 5em;
+  height: 2.5em;
+  background: rgba(255, 179, 0, 0.15);
+  border: 2px solid #ffb300;
+  border-radius: 1.3em;
+  transition: all 0.3s ease;
+  padding: 0.2em;
+}
+
+.nav-toggle-input:checked ~ .nav-toggle-slider {
+  background: rgba(255, 179, 0, 0.25);
+}
+
+.nav-toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 2em;
+  height: 2em;
+  background: linear-gradient(135deg, #ffe082 0%, #ffb300 100%);
+  border-radius: 50%;
+  top: 0.25em;
+  left: 0.25em;
+  transition: left 0.3s ease;
+  box-shadow: 0 2px 6px rgba(255, 179, 0, 0.4);
+}
+
+.nav-toggle-input:checked ~ .nav-toggle-slider::after {
+  left: calc(100% - 2.25em);
+}
+
+.nav-toggle-icon {
+  position: absolute;
+  font-size: 1.2em;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.nav-toggle-icon-left {
+  left: 0.4em;
+  opacity: 0.6;
+}
+
+.nav-toggle-input:checked ~ .nav-toggle-slider .nav-toggle-icon-left {
+  opacity: 0.3;
+}
+
+.nav-toggle-icon-right {
+  right: 0.4em;
+  opacity: 0.3;
+}
+
+.nav-toggle-input:checked ~ .nav-toggle-slider .nav-toggle-icon-right {
+  opacity: 0.6;
+}

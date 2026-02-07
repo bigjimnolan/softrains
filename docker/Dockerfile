@@ -1,8 +1,10 @@
+
 # Stage 1: Build
 FROM ubuntu:25.04 AS builder
 
 # Set environment variables to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
+ENV CGO_ENABLED=1
 
 # Install dependencies for building
 RUN apt-get update && apt-get install -y \
@@ -10,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     golang \
     git \
     && rm -rf /var/lib/apt/lists/*
+
+## ...existing code before multi-stage runtime setup...
 
 # Set the working directory
 WORKDIR /app
@@ -23,20 +27,22 @@ RUN go build -o softrains .
 
 # Stage 2: Runtime
 FROM ubuntu:25.04
-
+# Create a non-root user to run the application
+RUN useradd -m -d /home/softrains -s /bin/bash softrains
 # Set environment variables to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies and openssl for certificate generation
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     openssl \
+    net-tools \
+    iputils-ping \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
-WORKDIR /app
 
-# Copy the built binary from the builder stage
+# Copy built app from builder
 COPY --from=builder /app/softrains /app/softrains
 
 # Copy the startup script
@@ -58,6 +64,12 @@ RUN mkdir -p /etc/ssl/private && \
     -out /etc/ssl/certs/softrains.crt \
     -subj "/CN=softrains.com" \
     -addext "subjectAltName=DNS:softrains.com"
+
+# Set permissions for softrains user
+RUN chown -R softrains:softrains /app /etc/ssl/private /etc/ssl/certs
+
+# Switch to softrains user
+USER softrains
 
 # Set the entrypoint to the startup script
 ENTRYPOINT ["/app/startup.sh"]

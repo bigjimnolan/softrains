@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoftRains Camera Map</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link id="softrains-theme-icon" rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
+    <script>
+      // Example input: window.softrainsData = { cameras: [{ name: 'Front Door', lat: 47.7863028, lng: -122.1595504, ... }] };
+      window.softrainsData = {
+        cameras: {{.CamerasJSON}},
+        actions: {{.ActionsJSON}},
+        devices: {{.DevicesJSON}}
+      };
+      // The maps-render.js will use window.softrainsData.cameras to place markers
+      // and can add metadata overlays as needed.
+    </script>
+<!-- prettier-ignore -->
+    
+    
+    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+        key: "{{.GoogleMapsAPIKey}}",
+        v: "beta"
+      });
+    </script>
+    <script src="/static/maps-render.js"></script>
+  </head>
+  <body class="softrains-theme">
+    <div class="dashboard-header-bar">
+      <div class="dashboard-logo-wrap">
+        <img src="/static/images/logo.svg" alt="SoftRains Logo" class="dashboard-logo">
+        <label class="nav-toggle" title="Toggle between Dashboard and Map">
+          <input type="checkbox" class="nav-toggle-input" id="page-nav-toggle" checked>
+          <span class="nav-toggle-slider">
+            <span class="nav-toggle-icon nav-toggle-icon-left">⚙️</span>
+            <span class="nav-toggle-icon nav-toggle-icon-right">🗺️</span>
+          </span>
+        </label>
+      </div>
+      <script>
+        document.getElementById('page-nav-toggle').addEventListener('change', function() {
+          window.location.href = this.checked ? '/maps' : '/dashboard';
+        });
+      </script>
+      <div class="theme-toggle-group">
+        <label class="theme-toggle-label" for="theme-toggle">
+          <input type="checkbox" id="theme-toggle">
+          <span>SoftRains Theme</span>
+        </label>
+      </div>
+    </div>
+    <h1>Camera Map</h1>
+    <div id="map"></div>
+  </body>
+</html>

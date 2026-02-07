@@ -84,17 +84,17 @@ func (h *SoftRainsHook) OnUnsubscribed(cl *mqtt.Client, pk packets.Packet) {
 }
 
 func (h *SoftRainsHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Packet, error) {
-	h.Log.Info("received from client", "client", cl.ID, "payload", string(pk.Payload))
+	h.Log.Debug("received from client", "client", cl.ID, "payload", string(pk.Payload))
 
 	pkx := pk
 	if string(pk.Payload) == "hello" {
 		pkx.Payload = []byte("hello world")
-		h.Log.Info("received modified packet from client", "client", cl.ID, "payload", string(pkx.Payload))
+		h.Log.Debug("received modified packet from client", "client", cl.ID, "payload", string(pkx.Payload))
 	}
 
 	return pkx, nil
 }
 
 func (h *SoftRainsHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
-	h.Log.Info("published to client", "client", cl.ID, "payload", string(pk.Payload))
+	h.Log.Debug("published to client", "client", cl.ID, "payload", string(pk.Payload))
 }

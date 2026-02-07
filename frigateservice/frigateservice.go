@@ -63,7 +63,7 @@ func publishToTopic(client *mqtt.Client, topic string) {
 	log.Info().Msgf("Published message to topic %s\n", topic)
 }
 
-func (fs *FrigateService) Start(callBack func(string, bool)) error {
+func (fs *FrigateService) Start(callBack func(string, string, bool)) error {
 	// Set up the MQTT client
 	client := mqtt.NewClient(fs.MqttURL + ":" + fs.MqttPort)
 	client.ClientID = "MQTT-Sub"
@@ -114,7 +114,7 @@ func (fs *FrigateService) Start(callBack func(string, bool)) error {
 		// Loop through the deduplicated zones and execute the callback
 		for zone := range uniqueZones {
 			log.Info().Msgf("Executing callback for zone: %s\n", zone)
-			callBack(zone+":"+cameraDetectEvent.Before.Label, false)
+			callBack(zone+":"+cameraDetectEvent.Before.Label, cameraDetectEvent.Before.ID, false)
 		}
 
 

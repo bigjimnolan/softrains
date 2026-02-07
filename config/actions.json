@@ -1,58 +1,418 @@
 [
   {
-    "deviceId": 101,
+    "deviceId": 26,
     "delay": 0,
     "primaryAction": "on",
     "secondaryAction": "",
-    "cameraSource": "FrontDoor:person",
-    "backoff": 2
-  },
-  {
-    "deviceId": 101,
-    "delay": 60,
-    "primaryAction": "off",
-    "secondaryAction": "",
-    "cameraSource": "FrontDoor:person",
-    "backoff": 2
-  },
-  {
-    "deviceId": 202,
-    "delay": 0,
-    "primaryAction": "open",
-    "secondaryAction": "",
-    "cameraSource": "Garage:car",
-    "backoff": 5
-  },
-  {
-    "deviceId": 202,
-    "delay": 30,
-    "primaryAction": "close",
-    "secondaryAction": "",
-    "cameraSource": "Garage:car",
-    "backoff": 5
-  },
-  {
-    "deviceId": 303,
-    "delay": 0,
-    "primaryAction": "notify",
-    "secondaryAction": "BackYard:dog",
-    "cameraSource": "BackYard:dog",
-    "backoff": 0
-  },
-  {
-    "deviceId": 404,
-    "delay": 10,
-    "primaryAction": "on",
-    "secondaryAction": "",
-    "cameraSource": "Garden:person",
+    "cameraSource": "PatioLowerWalkway:person",
     "backoff": 1
   },
   {
-    "deviceId": 404,
-    "delay": 70,
+    "deviceId": 26,
+    "delay": 60,
     "primaryAction": "off",
     "secondaryAction": "",
-    "cameraSource": "Garden:person",
+    "cameraSource": "PatioLowerWalkway:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 249,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "PatioProper:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 249,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "PatioProper:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 247,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "HouseGardenWalk:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 247,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "HouseGardenWalk:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 246,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "HouseMainStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 246,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "HouseMainStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveEntry:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveEntry:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveExterior:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveExterior:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveEntry:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveEntry:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 136,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "HouseMainStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 136,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "HouseMainStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 163,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveUpper:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 163,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveUpper:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveExterior:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveExterior:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveLower:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveLower:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveUpper:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 245,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveUpper:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 46,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "GarageDrive:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 46,
+    "delay": 240,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "GarageDrive:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 163,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveUpper:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 163,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "MainDriveUpper:car",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 29,
+    "primaryAction": "close",
+    "secondaryAction": "",
+    "cameraSource": "BoobyTrapWater:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 2,
+    "primaryAction": "open",
+    "secondaryAction": "",
+    "cameraSource": "ActivateHoseZone:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 5,
+    "primaryAction": "close",
+    "secondaryAction": "",
+    "cameraSource": "ActivateHoseZone:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 6,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "ActivateHoseZone:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 49,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "GateItself:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 49,
+    "delay": 10,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "GateItself:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "BoobyTrapWater:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 1,
+    "primaryAction": "open",
+    "secondaryAction": "",
+    "cameraSource": "BoobyTrapWater:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 30,
+    "primaryAction": "close",
+    "secondaryAction": "",
+    "cameraSource": "BoobyTrapWater:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 48,
+    "delay": 32,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "BoobyTrapWater:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 233,
+    "delay": 0,
+    "primaryAction": "deviceNotification",
+    "secondaryAction": "GarageLawn:car",
+    "cameraSource": "GarageLawn:car",
+    "backoff": 0
+  },
+  {
+    "deviceId": 256,
+    "delay": 1,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "LowerDrivewayRectangle:person",
+    "backoff": 10
+  },
+  {
+    "deviceId": 250,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "DeckOrDeckStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 250,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "DeckOrDeckStairs:dog",
+    "backoff": 1
+  },
+  {
+    "deviceId": 250,
+    "delay": 30,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "DeckOrDeckStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 250,
+    "delay": 30,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "DeckOrDeckStairs:dog",
+    "backoff": 1
+  },
+  {
+    "deviceId": 41,
+    "delay": 1,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "GarageOne:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 41,
+    "delay": 30,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "GarageOne:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 42,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "GarageTwo:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 42,
+    "delay": 30,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "GarageTwo:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 37,
+    "delay": 0,
+    "primaryAction": "on",
+    "secondaryAction": "",
+    "cameraSource": "GarageHouseStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 37,
+    "delay": 60,
+    "primaryAction": "off",
+    "secondaryAction": "",
+    "cameraSource": "GarageHouseStairs:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 1,
+    "delay": 1,
+    "primaryAction": "on",
+    "secondaryAction": "off",
+    "cameraSource": "TestZone:person",
+    "backoff": 1
+  },
+  {
+    "deviceId": 999,
+    "delay": 10,
+    "primaryAction": "off",
+    "secondaryAction": "on",
+    "cameraSource": "TestCamera:alien",
     "backoff": 1
   }
 ]

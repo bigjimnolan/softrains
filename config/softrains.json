@@ -4,41 +4,286 @@
       "frigate/events",
       "frigate/tracked_object_update"
     ],
-    "MqttPort": "1883",
+    "MqttPort": "1884",
     "MqttURL": "tcp://localhost"
   },
   "HubitatConfig": {
     "ActionsListLocation": "/app/config/actions.json",
     "DeviceBackoffEnabled": true,
     "HubitatDevices": {
-      "101": {
-        "APIId": 200,
-        "DeviceBackoff": 2,
-        "DeviceId": 101,
-        "DeviceURL": "https://hubitat.local/api/200/devices/101/<action>?access_token=<access_token>",
+      "136": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 136,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/136/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758308603.86229-7ocj82",
+          "TriggerTime": "2025-09-19T19:03:24.904519012Z",
+          "TriggerType": "person",
+          "TriggerZone": "HouseMainStairs"
+        },
         "PostBody": null
       },
-      "102": {
-        "APIId": 200,
-        "DeviceBackoff": 3,
-        "DeviceId": 102,
-        "DeviceURL": "https://hubitat.local/api/200/devices/102/<action>?access_token=<access_token>",
+      "140": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 140,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/140/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
         "PostBody": null
+      },
+      "163": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 163,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/163/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758306074.551957-y0l522",
+          "TriggerTime": "2025-09-19T19:11:12.137285083Z",
+          "TriggerType": "car",
+          "TriggerZone": "MainDriveUpper"
+        },
+        "PostBody": null
+      },
+      "232": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 232,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/232/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "233": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 233,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/233/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "245": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 245,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/245/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758306074.551957-y0l522",
+          "TriggerTime": "2025-09-19T19:11:12.134912724Z",
+          "TriggerType": "car",
+          "TriggerZone": "MainDriveUpper"
+        },
+        "PostBody": null
+      },
+      "246": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 246,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/246/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758308603.86229-7ocj82",
+          "TriggerTime": "2025-09-19T19:03:24.900576047Z",
+          "TriggerType": "person",
+          "TriggerZone": "HouseMainStairs"
+        },
+        "PostBody": null
+      },
+      "247": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 247,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/247/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758306258.441763-l2hbv5",
+          "TriggerTime": "2025-09-19T18:25:50.359084836Z",
+          "TriggerType": "person",
+          "TriggerZone": "HouseGardenWalk"
+        },
+        "PostBody": null
+      },
+      "249": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 249,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/249/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758293051.919749-12cuox",
+          "TriggerTime": "2025-09-19T14:44:13.819580478Z",
+          "TriggerType": "person",
+          "TriggerZone": "PatioProper"
+        },
+        "PostBody": null
+      },
+      "250": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 250,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/250/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "256": {
+        "APIId": 132,
+        "DeviceBackoff": 0,
+        "DeviceId": 256,
+        "DeviceURL": "https://192.168.68.73/apps/api/132/devices/256/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758303744.255661-4zpe0r",
+          "TriggerTime": "2025-09-19T17:42:32.921216756Z",
+          "TriggerType": "person",
+          "TriggerZone": "LowerDrivewayRectangle"
+        },
+        "PostBody": null
+      },
+      "26": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 26,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/26/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "37": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 37,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/37/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758303794.001614-rka0ff",
+          "TriggerTime": "2025-09-19T17:43:33.048010792Z",
+          "TriggerType": "person",
+          "TriggerZone": "GarageHouseStairs"
+        },
+        "PostBody": null
+      },
+      "38": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 38,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/38/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "40": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 40,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/40/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "41": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 41,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/41/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "46": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 46,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/46/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "1758308295.876117-pz64c0",
+          "TriggerTime": "2025-09-19T18:58:48.946485565Z",
+          "TriggerType": "car",
+          "TriggerZone": "GarageDrive"
+        },
+        "PostBody": null
+      },
+      "48": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 48,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/48/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "49": {
+        "APIId": 52,
+        "DeviceBackoff": 0,
+        "DeviceId": 49,
+        "DeviceURL": "https://192.168.68.74/apps/api/52/devices/49/{action}?access_token={access_token}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        },
+        "PostBody": null
+      },
+      "-1": {
+        "APIId": 0,
+        "DeviceBackoff":0,
+        "DeviceId":-1,
+        "DeviceURL": "https://192.168.68.109/relay/{action}/state/{action2}",
+        "LastTrigger": {
+          "TriggerID": "",
+          "TriggerTime": "0001-01-01T00:00:00Z",
+          "TriggerType": "",
+          "TriggerZone": ""
+        }
       }
     },
     "TimeoutSeconds": 15
   },
-  "LogLevel": "info",
+  "LogLevel": "trace",
   "MQTTService": {
-    "Address": ":1883",
+    "Address": ":1884",
     "ID": "softrains-mqtt"
   },
   "UIService": {
     "ActionsPath": "/app/config/actions.json",
-    "ConfigPath": "/app/config/softrains-demo.json",
-    "ServerCertPath": "/etc/ssl/certs/demo.crt",
-    "ServerKeyPath": "/etc/ssl/private/demo.key",
+    "ConfigPath": "/app/config/softrains.json",
+    "ServerCertPath": "/etc/ssl/certs/softrains.crt",
+    "ServerKeyPath": "/etc/ssl/private/softrains.key",
     "TLSListenPort": "8443",
-    "WebFolderDocRoot": "/app/ui/"
+    "WebFolderDocRoot": "/app/"
   }
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -58,7 +59,23 @@ func (hs HubitatService) Start() {
 			}
 		case update := <-*hs.UpdateChannel:
 			log.Debug().Msgf("Received update: %v", update)
-			hs.HubitatDeviceList[update.DeviceID] = update
+			existing, exists := hs.HubitatDeviceList[update.DeviceID]
+			if exists {
+				existingVal := reflect.ValueOf(&existing).Elem()
+				updateVal := reflect.ValueOf(update)
+				for i := 0; i < updateVal.NumField(); i++ {
+					field := updateVal.Type().Field(i)
+					updateField := updateVal.Field(i)
+					// Only update if the field is not zero (non-nil for pointers, non-empty for values)
+					if !updateField.IsZero() {
+						existingVal.FieldByName(field.Name).Set(updateField)
+					}
+				}
+				hs.HubitatDeviceList[update.DeviceID] = existing
+			} else {
+				hs.HubitatDeviceList[update.DeviceID] = update
+			}
+			log.Info().Msgf("Updated device: %v", hs.HubitatDeviceList[update.DeviceID])
 		case <-time.After(time.Duration(hs.Timeout) * time.Second):
 			continue
 		}
@@ -66,25 +83,35 @@ func (hs HubitatService) Start() {
 
 }
 
-// checkListAndSend is our polling interface for our schedule list.
+// checkListAndSend loops through loaded actions and runs the overdue ones.
 func (hs HubitatService) checkListAndSend() {
 	for combinedKey, actionInfo := range hs.AutomaticAction {
 		if actionInfo.CurrentDelay.Before(time.Now()) {
 			if actionInfo.DeviceId == 0 {
 				callPostAction(*hs.HubitatDeviceList[actionInfo.DeviceId].DeviceURL, *hs.HubitatDeviceList[actionInfo.DeviceId].PostBody, actionInfo.PrimaryAction, actionInfo.SecondaryAction, true)
 			} else {
-				log.Debug().Msg(fmt.Sprintf("Running Action: %v -> %v:%v", actionInfo.DeviceId, actionInfo.PrimaryAction, actionInfo.SecondaryAction))
-				callAction(*hs.HubitatDeviceList[actionInfo.DeviceId].DeviceURL, actionInfo.PrimaryAction, actionInfo.SecondaryAction)
+				log.Debug().Msg(fmt.Sprintf("Running Action: %v -> %v:%v", actionInfo.DeviceId, actionInfo.PrimaryAction,))
+				if deviceInfo, exists := hs.HubitatDeviceList[actionInfo.DeviceId]; exists && deviceInfo != (HubitatDeviceInfo{}) {
+					err :=	callAction(*deviceInfo.DeviceURL, actionInfo.PrimaryAction, actionInfo.SecondaryAction)
+					if err != nil {
+						log.Error().Msgf("Error calling action for device %v: %v", actionInfo.DeviceId, err)
+						log.Debug().Msgf("Device Information: %v", deviceInfo)
+						log.Debug().Msgf("Action Information: %v", actionInfo)						
+					}
+				} else {
+					log.Debug().Msg(fmt.Sprintf("Device not found: %v", actionInfo.DeviceId))
+					log.Trace().Msgf("Current Device List: %v", hs.HubitatDeviceList)
+				}
+				delete(hs.AutomaticAction, combinedKey)
 			}
-			delete(hs.AutomaticAction, combinedKey)
 		}
 	}
 }
 
 // callAction hits the hubitat MakerAPI and, for now updates a single action (on or off)
 func callAction(url string, action string, secondaryAction string) error {
-	url = strings.Replace(url, "<action>", action, 1)
-	url = strings.Replace(url, "<action2>", secondaryAction, 1)
+	url = strings.Replace(url, "{action}", action, 1)
+	url = strings.Replace(url, "{action2}", secondaryAction, 1)
 	client := http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -96,15 +123,23 @@ func callAction(url string, action string, secondaryAction string) error {
 		return err
 	}
 
-	if log.Logger.GetLevel() == zerolog.TraceLevel {
+	log.Debug().Msgf("Req: %v Response Status: %s",url,  res.Status)
+
+	defer res.Body.Close()
+
+	// Only print body if not 200
+	if res.StatusCode == 200 {
+		return nil
+	}
+
+	if zerolog.GlobalLevel() == zerolog.TraceLevel {
 		resBody, err := io.ReadAll(res.Body)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("client: response body: %s\n", resBody)
+		log.Trace().Msgf("Response Body: %s", resBody)	
 	}
-
 	return nil
 }
 

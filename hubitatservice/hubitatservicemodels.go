@@ -9,12 +9,20 @@ type HubitatServiceConfig struct {
 	ActionsListLocation  string                    `json:"ActionsListLocation"`
 }
 
+type SoftRainsTrigger struct {
+	TriggerType string    `json:"TriggerType"`
+	TriggerZone string    `json:"TriggerZone"`
+	TriggerTime time.Time `json:"TriggerTime"`
+	TriggerID   string    `json:"TriggerID"`
+}
+
 type HubitatDeviceInfo struct {
-	DeviceID      int     `json:"DeviceId"`
-	APIID         int     `json:"APIId"`
-	DeviceURL     *string `json:"DeviceURL"`
-	PostBody      *string `json:"PostBody"`
-	DeviceBackoff int     `json:"DeviceBackoff"`
+	DeviceID      int              `json:"DeviceId"`
+	APIID         int              `json:"APIId"`
+	DeviceURL     *string          `json:"DeviceURL"`
+	PostBody      *string          `json:"PostBody"`
+	DeviceBackoff int              `json:"DeviceBackoff"`
+	LastTrigger   SoftRainsTrigger `json:"LastTrigger"`
 }
 
 type ActionType struct {

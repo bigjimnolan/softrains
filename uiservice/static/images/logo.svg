@@ -1,0 +1,36 @@
+<svg width="100%" height="100%" viewBox="45 35 110 130" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+
+    <!-- Cropped, subtle, faded sun and sunbeams behind the house -->
+    <circle cx="100" cy="110" r="50" fill="#a8924f" />
+
+    <!-- Stylized, sickly sunbeams -->
+    <line x1="100" y1="110" x2="100" y2="40" stroke="#a8924f" stroke-width="2" stroke-linecap="round" />
+    <line x1="100" y1="110" x2="140" y2="70" stroke="#a8924f" stroke-width="2" stroke-linecap="round" />
+    <line x1="100" y1="110" x2="60" y2="70" stroke="#a8924f" stroke-width="2" stroke-linecap="round" />
+    <line x1="100" y1="110" x2="150" y2="110" stroke="#a8924f" stroke-width="2" stroke-linecap="round" />
+    <line x1="100" y1="110" x2="50" y2="110" stroke="#a8924f" stroke-width="2" stroke-linecap="round" />
+
+    <!-- The house silhouette, simplified but with a broken top -->
+    <path d="M 60 120 L 60 160 L 140 160 L 140 120 L 115 100 L 100 80 L 85 100 L 60 120 Z" fill="#333" />
+    
+    <!-- Little dots of light passing through the house -->
+    <circle cx="60" cy="130" r="2.5" fill="#a8924f" />
+    <circle cx="110" cy="145" r="0.5" fill="#a8924f" />
+    <circle cx="85" cy="135" r="0.5" fill="#a8924f" />    
+    <circle cx="95" cy="115" r="0.5" fill="#a8924f" />
+    <circle cx="90" cy="100" r="0.5" fill="#a8924f" />
+    <circle cx="115" cy="90" r="0.5" fill="#a8924f" />
+    <circle cx="105" cy="110" r="0.5" fill="#a8924f" />    
+    <circle cx="65" cy="140" r="0.5" fill="#a8924f" />
+    <circle cx="80" cy="148" r="0.5" fill="#a8924f" />
+    <circle cx="100" cy="137" r="0.5" fill="#a8924f" />
+    <circle cx="110" cy="142" r="0.5" fill="#a8924f" />
+    <circle cx="120" cy="150" r="0.5" fill="#a8924f" />
+
+
+    <!-- A thin vine growing up through the house -->
+    <path d="M 98 160 Q 90 145, 100 135 T 105 120" stroke="#B08D64" stroke-width="2" fill="none" />
+    <path d="M 95 160 Q 88 140, 95 125" stroke="#609966" stroke-width="1" fill="none" />
+    
+
+</svg>

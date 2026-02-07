@@ -20,7 +20,8 @@ import (
 
 var (
 	mailChannel           = make(chan []hubitatservice.ActionType)
-	updateChannel         = make(chan uiservice.UpdateMsg)
+	updateChannelIn       = make(chan uiservice.UpdateMsg)
+	updateChannelOut      = make(chan uiservice.UpdateMsg)
 	hserviceUpdateChannel = make(chan hubitatservice.HubitatDeviceInfo)
 	actionsList           = make(map[string][]hubitatservice.ActionType)
 	actionsListMutex      sync.Mutex
@@ -30,7 +31,7 @@ func startControllerChannel(actionsListLocation string) {
 	// This function is used to start the controller channel
 	// It is used to send actions to the hubitat service
 	// and updates to the UI service
-	for update := range updateChannel {
+	for update := range updateChannelOut {
 		log.Debug().Msgf("Received updates: %v", update)
 		// Process updates here, e.g., send to UI service
 		switch update.UpdateType {
@@ -46,6 +47,34 @@ func startControllerChannel(actionsListLocation string) {
 			if err != nil {
 				log.Error().Msgf("Failed to get actions: %v", err)
 			}
+		case "reload":
+			err := getActions(actionsListLocation)
+			if err != nil {
+				log.Error().Msgf("Failed to get actions: %v", err)
+			} else {
+				// Send all actions to UI
+				actionsListMutex.Lock()
+				for _, actions := range actionsList {
+					for _, action := range actions {
+						updateChannelIn <- uiservice.UpdateMsg{
+							UpdateType: "action",
+							UpdateData: action,
+						}
+					}
+				}
+				actionsListMutex.Unlock()
+				// Send all devices to UI
+				if softRainsConfig, err := buildSoftRains(); err == nil {
+					for _, device := range softRainsConfig.HubitatConfig.HubitatDevices {
+						updateChannelIn <- uiservice.UpdateMsg{
+							UpdateType: "device",
+							UpdateData: device,
+						}
+					}
+				} else {
+					log.Error().Msgf("Failed to reload devices for UI: %v", err)
+				}
+			}
 		default:
 			log.Warn().Msgf("Unknown update type: %v", update.UpdateType)
 		}
@@ -53,11 +82,30 @@ func startControllerChannel(actionsListLocation string) {
 }
 
 // Call actions tries to find registered actions, and, if so, run them.
-func CallActions(from string, preProcess bool) {
+func CallActions(from string, id string, preProcess bool) {
 	log.Debug().Msgf("CallActions called for: %v", from)
 	actions, ok := actionsList[from]
 	if ok {
 		mailChannel <- actions
+		// Actions send, now update ui and device last trigger
+		for _, action := range actions {
+			softRainsTrigger := hubitatservice.SoftRainsTrigger{
+				TriggerType: strings.Split(from, ":")[1],
+				TriggerZone: strings.Split(from, ":")[0],
+				TriggerTime: time.Now(),
+				TriggerID:   id,
+			}
+
+			deviceUpdate := hubitatservice.HubitatDeviceInfo{
+				DeviceID:    action.DeviceId,
+				LastTrigger: softRainsTrigger,
+			}
+			updateChannelIn <- uiservice.UpdateMsg{
+				UpdateType: "device",
+				UpdateData: deviceUpdate,
+			}
+			hserviceUpdateChannel <- deviceUpdate
+		}
 		return
 	}
 
@@ -91,7 +139,7 @@ func getSecrets(hubDevices map[int]hubitatservice.HubitatDeviceInfo) {
 			log.Warn().Msgf("Could not find token at: %v\n", tokenString)
 			continue
 		}
-		*device.DeviceURL = strings.Replace(*device.DeviceURL, "<access_token>", token, 1)
+		*device.DeviceURL = strings.Replace(*device.DeviceURL, "{access_token}", token, 1)
 	}
 }
 
@@ -230,7 +278,8 @@ func StartHere() {
 	wg.Add(1)
 	go func(ui *uiservice.UIService) {
 		defer wg.Done()
-		ui.UpdateChannel = &updateChannel
+		ui.UpdateChannelOut = &updateChannelOut
+		ui.UpdateChannelIn = &updateChannelIn
 		err := ui.Start()
 		if err != nil {
 			log.Fatal().Msgf("UI Service Failed to Start %v", err)
