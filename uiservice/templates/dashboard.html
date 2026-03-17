@@ -3,10 +3,13 @@
 <head>
   <title>SoftRains UI Dashboard</title>
   <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/dashboard-render.js"></script>
+  <script src="/static/frigate-login.js"></script>
+  <script src="/static/dashboard-render.js"></script>  
   <link id="softrains-theme-icon" rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
 </head>
 <body>
+  <!-- Container for Frigate login modal -->
+  <div id="frigate-modal-container"></div>
   <div id="notification"></div>
   <div class="dashboard-header-bar">
     <div class="dashboard-logo-wrap">
@@ -25,6 +28,7 @@
       });
     </script>
     <div class="theme-toggle-group">
+      <button id="frigate-login-btn" class="frigate-login-btn" title="Login to Frigate">🔐 Frigate Login</button>
       <label class="theme-toggle-label" for="theme-toggle">
         <input type="checkbox" id="theme-toggle">
         <span>SoftRains Theme</span>
@@ -63,8 +67,14 @@
       </div>
     </div>
   </div>
+  <!-- Frigate Login Modal -->
   <script>
+    function openFrigateLoginModal() {
+      showFrigateLoginModal();
+    }
+    document.getElementById('frigate-login-btn').addEventListener('click', openFrigateLoginModal);
     window.softrainsData = {
+      cameras: {{.CamerasJSON}},
       actions: {{.ActionsJSON}},
       devices: {{.DevicesJSON}}
     };

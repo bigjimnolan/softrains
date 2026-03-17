@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoftRains Detection Vectors</title>
+    <script src="/static/frigate-login.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 20px 0;
+            grid-column: 1 / -1;
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            height: calc(100vh - 100px);
+        }
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        #timeline-container {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        #timeline-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        #timeline-canvas {
+            width: 100%;
+            height: 80px;
+            border: 1px solid #444;
+            display: block;
+            background: #1a1a1a;
+            margin-top: 10px;
+        }
+        .timeline-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .timeline-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .timeline-control-group label {
+            font-size: 11px;
+            color: #aaa;
+        }
+        .timeline-control-group input[type="range"] {
+            width: 100%;
+        }
+        .timeline-control-group input[type="datetime-local"] {
+            padding: 5px;
+            font-size: 11px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 3px;
+        }
+        .playback-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .playback-controls button {
+            flex: 1;
+            padding: 6px 8px;
+            font-size: 12px;
+            background: #2196F3;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .playback-controls button:hover {
+            background: #1976D2;
+        }
+        .playback-controls button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .playback-info {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 10px;
+            color: #aaa;
+        }
+        #controls {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        #controls button {
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px;
+            font-size: 12px;
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #controls button:hover {
+            background: #45a049;
+        }
+        .filter-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+        }
+        #overhead-view {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        #overhead-view h3 {
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+        #overhead-canvas {
+            flex: 1;
+            border: 1px solid #444;
+            display: block;
+            background: #000;
+            min-height: 400px;
+            cursor: grab;
+        }
+        #overhead-canvas.panning {
+            cursor: grabbing;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            font-size: 11px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 2px;
+        }
+        .stats {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        /* Scrollbar styling */
+        .left-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .left-panel::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+        .left-panel::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="frigate-modal-container"></div>
+    <script src="/static/detectionvectors.js"></script>
+    <h1>🎯 SoftRains Detection Vectors</h1>
+    
+    <div class="main-container">
+        <div class="left-panel">
+            <div id="timeline-container">
+                <h3>Detection Timeline</h3>
+                
+                <div class="timeline-controls">
+                    <div class="timeline-control-group">
+                        <label>Start Time</label>
+                        <input type="datetime-local" id="start-datetime" step="1">
+                    </div>
+                    <div class="timeline-control-group">
+                        <label>End Time</label>
+                        <input type="datetime-local" id="end-datetime" step="1">
+                    </div>
+                    <div class="timeline-control-group">
+                        <label>Playback Time</label>
+                        <input type="datetime-local" id="playback-datetime" step="1" disabled style="background: #444;">
+                    </div>
+                    <div class="timeline-control-group">
+                        <label>Intersection Temporal Window: <span id="temporal-window-value">1000 ms</span></label>
+                        <input type="range" id="temporal-window-slider" min="0" max="5000" step="1" value="1000">
+                    </div>
+                </div>
+                
+                <canvas id="timeline-canvas"></canvas>
+
+                <div class="playback-controls">
+                    <button id="play-btn">▶ Play</button>
+                    <button id="pause-btn" disabled>⏸ Pause</button>
+                    <button id="stop-btn">⏹ Stop</button>
+                </div>
+                <div class="playback-info" id="playback-info">Ready</div>
+            </div>
+
+            <div id="controls">
+                <button id="frigate-login-btn" title="Login to Frigate">🔐 Frigate Login</button>
+                <button id="reload-timeline">↻ Reload Data</button>
+                <button id="reset-filter">Reset to Full Range</button>
+            </div>
+            
+            <div class="filter-panels">
+                <div id="camera-filters" style="
+                    background: #2a2a2a;
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                ">
+                    <strong style="display: block; margin-bottom: 10px; font-size: 12px;">Camera Filters</strong>
+                    <div id="camera-filter-buttons" style="display: flex; flex-direction: column; gap: 5px;"></div>
+                </div>
+
+                <div id="type-filters" style="
+                    background: #2a2a2a;
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                ">
+                    <strong style="display: block; margin-bottom: 10px; font-size: 12px;">Object Filters</strong>
+                    <div id="type-filter-buttons" style="display: flex; flex-direction: column; gap: 5px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div id="overhead-view">
+                <h3>Overhead Detection Vectors</h3>
+                <canvas id="overhead-canvas" width="1200" height="800"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(255, 87, 34, 0.8);"></div>
+                        <span>person</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(33, 150, 243, 0.8);"></div>
+                        <span>car</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(156, 39, 176, 0.8);"></div>
+                        <span>motorcycle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(76, 175, 80, 0.8);"></div>
+                        <span>bus</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fff;"></div>
+                        <span>cameras</span>
+                    </div>
+                </div>
+                <div class="stats" id="stats">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detection type colors
+        const TYPE_COLORS = {
+            'person': 'rgba(255, 87, 34, 0.8)',
+            'car': 'rgba(33, 150, 243, 0.8)',
+            'motorcycle': 'rgba(156, 39, 176, 0.8)',
+            'bus': 'rgba(76, 175, 80, 0.8)'
+        };
+
+        let detections = [];
+        let detectionIndex = {}; // camera -> type -> { detections: [...] }
+        let houselayer = null;
+        let filteredDetections = [];
+        let startTime = null;
+        let endTime = null;
+        let minTime = null;
+        let maxTime = null;
+        let selectedDetection = null;
+        let selectedCameras = new Set(); // All cameras selected by default
+        let selectedTypes = new Set(); // All types selected by default
+        let vectorAnalyzer = new DetectionVectorAnalysis();
+        let currentIntersections = [];
+        let temporalWindowMs = 1000;
+
+        // Overhead map pan/zoom state
+        let mapScale = 1;
+        let mapOffsetX = 0;
+        let mapOffsetY = 0;
+        let isPanningMap = false;
+        let panLastX = 0;
+        let panLastY = 0;
+        let mapDragged = false;
+        
+        let isPlaying = false;
+        let playbackCurrentTime = null;
+        let playbackStart = null;
+        let playbackEnd = null;
+        let playbackAnimationId = null;
+        const PLAYBACK_DURATION_MS = 10000; // 10 seconds
+        
+        // Timeline drag state
+        let isDraggingStart = false;
+        let isDraggingEnd = false;
+        const GRAB_BAR_WIDTH = 8;
+        const GRAB_BAR_COLOR = '#2196F3';
+        const GRAB_BAR_HOVER_COLOR = '#1976D2';
+
+        function worldToScreen(x, y) {
+            return {
+                x: x * mapScale + mapOffsetX,
+                y: y * mapScale + mapOffsetY
+            };
+        }
+
+        function screenToWorld(x, y) {
+            return {
+                x: (x - mapOffsetX) / mapScale,
+                y: (y - mapOffsetY) / mapScale
+            };
+        }
+
+        function buildDetectionIndex() {
+            detectionIndex = {};
+
+            detections.forEach(detection => {
+                const camera = detection.camera;
+                const type = detection.type || 'unknown';
+
+                if (!detectionIndex[camera]) {
+                    detectionIndex[camera] = {};
+                }
+
+                if (!detectionIndex[camera][type]) {
+                    detectionIndex[camera][type] = { detections: [] };
+                }
+
+                detectionIndex[camera][type].detections.push(detection);
+            });
+
+            Object.values(detectionIndex).forEach(typeMap => {
+                Object.values(typeMap).forEach(bucket => {
+                    bucket.detections.sort((a, b) => a._timestampMs - b._timestampMs);
+                });
+            });
+        }
+
+        function getIndexedCameras() {
+            return Object.keys(detectionIndex);
+        }
+
+        function getIndexedTypes() {
+            const allTypes = new Set();
+            Object.values(detectionIndex).forEach(typeMap => {
+                Object.keys(typeMap).forEach(type => allTypes.add(type));
+            });
+            return Array.from(allTypes);
+        }
+
+        function lowerBoundByTime(items, targetMs) {
+            let left = 0;
+            let right = items.length;
+            while (left < right) {
+                const mid = (left + right) >> 1;
+                if (items[mid]._timestampMs < targetMs) {
+                    left = mid + 1;
+                } else {
+                    right = mid;
+                }
+            }
+            return left;
+        }
+
+        function upperBoundByTime(items, targetMs) {
+            let left = 0;
+            let right = items.length;
+            while (left < right) {
+                const mid = (left + right) >> 1;
+                if (items[mid]._timestampMs <= targetMs) {
+                    left = mid + 1;
+                } else {
+                    right = mid;
+                }
+            }
+            return left;
+        }
+
+        // Load houselayer and extraction data
+        async function loadData() {
+            try {
+                // Load houselayer.json
+                const houselayerResp = await fetch('/static/mapdata/houselayer.json');
+                if (!houselayerResp.ok) throw new Error('Failed to fetch houselayer.json');
+                houselayer = await houselayerResp.json();
+
+                // Load extraction log
+                const response = await fetch('/api/extractions');
+                const text = await response.text();
+                const lines = text.trim().split('\n');
+                
+                detections = lines
+                    .map(line => {
+                        try {
+                            return JSON.parse(line);
+                        } catch (e) {
+                            return null;
+                        }
+                    })
+                    .filter(d => d !== null && d.camera && d.bounding_box);
+
+                detections.forEach(d => {
+                    d._timestampMs = new Date(d.timestamp).getTime();
+                });
+                
+                // Sort by timestamp
+                detections.sort((a, b) => a._timestampMs - b._timestampMs);
+                buildDetectionIndex();
+                
+                // Calculate time range
+                if (detections.length > 0) {
+                    minTime = new Date(detections[0].timestamp);
+                    maxTime = new Date(detections[detections.length - 1].timestamp);
+                } else {
+                    minTime = new Date();
+                    maxTime = new Date();
+                }
+                
+                console.log(`Loaded ${detections.length} detections from ${minTime} to ${maxTime}`);
+                
+                // Initialize camera filter with all cameras
+                selectedCameras = new Set(getIndexedCameras());
+                
+                // Initialize type filter with all types
+                selectedTypes = new Set(getIndexedTypes());
+                
+                resetTimeFilter();
+                renderCameraFilters();
+                renderTypeFilters();
+                renderTimeline();
+                applyTimeFilter();
+                renderOverheadView();
+            } catch (e) {
+                console.error('Failed to load data:', e);
+                document.getElementById('stats').textContent = 'Failed to load detection data.';
+            }
+        }
+
+        // Reset time filter to full range
+        function resetTimeFilter() {
+            startTime = new Date(minTime);
+            endTime = new Date(maxTime);
+            
+            document.getElementById('start-datetime').value = formatDateTimeLocal(startTime);
+            document.getElementById('end-datetime').value = formatDateTimeLocal(endTime);
+            
+            playbackCurrentTime = null;
+            stopPlayback();
+        }
+
+        // Format date for datetime-local input
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        }
+
+        // Render camera filter buttons
+        function renderCameraFilters() {
+            const cameras = getIndexedCameras();
+            
+            const container = document.getElementById('camera-filter-buttons');
+            container.innerHTML = '';
+            
+            cameras.sort().forEach(camera => {
+                const isSelected = selectedCameras.has(camera);
+                const button = document.createElement('button');
+                button.textContent = camera.replace('_cam', '');
+                button.style.cssText = `
+                    padding: 6px 10px;
+                    font-size: 11px;
+                    background: ${isSelected ? '#2196F3' : '#555'};
+                    color: #fff;
+                    border: ${isSelected ? '2px solid #fff' : '2px solid transparent'};
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                `;
+                button.addEventListener('click', () => {
+                    if (selectedCameras.has(camera)) {
+                        selectedCameras.delete(camera);
+                    } else {
+                        selectedCameras.add(camera);
+                    }
+                    renderCameraFilters();
+                    applyTimeFilter();
+                });
+                container.appendChild(button);
+            });
+        }
+        
+        // Render object type filter buttons
+        function renderTypeFilters() {
+            const types = getIndexedTypes();
+            
+            const container = document.getElementById('type-filter-buttons');
+            container.innerHTML = '';
+            
+            types.sort().forEach(type => {
+                const isSelected = selectedTypes.has(type);
+                const typeColor = TYPE_COLORS[type] || 'rgba(128, 128, 128, 0.8)';
+                const button = document.createElement('button');
+                button.textContent = type;
+                button.style.cssText = `
+                    padding: 6px 10px;
+                    font-size: 11px;
+                    background: ${isSelected ? typeColor : '#555'};
+                    color: #fff;
+                    border: ${isSelected ? '2px solid #fff' : '2px solid transparent'};
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                `;
+                button.addEventListener('click', () => {
+                    if (selectedTypes.has(type)) {
+                        selectedTypes.delete(type);
+                    } else {
+                        selectedTypes.add(type);
+                    }
+                    renderTypeFilters();
+                    applyTimeFilter();
+                });
+                container.appendChild(button);
+            });
+        }
+        
+        // Generate consistent color for detection ID
+        function getDetectionColor(detectionId, detectionType) {
+            // Use type color as base
+            const baseColor = TYPE_COLORS[detectionType] || 'rgba(255, 255, 255, 0.5)';
+            
+            // Extract RGB from base color
+            const match = baseColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (!match) return baseColor;
+            
+            let r = parseInt(match[1]);
+            let g = parseInt(match[2]);
+            let b = parseInt(match[3]);
+            
+            // Use detection ID to create variation
+            const hash = detectionId.split('').reduce((acc, char) => {
+                return char.charCodeAt(0) + ((acc << 5) - acc);
+            }, 0);
+            
+            // Apply subtle variation (±20%) based on hash
+            const variation = (hash % 40) - 20;
+            r = Math.max(0, Math.min(255, r + variation));
+            g = Math.max(0, Math.min(255, g + variation));
+            b = Math.max(0, Math.min(255, b + variation));
+            
+            return `rgba(${r}, ${g}, ${b}, 0.8)`;
+        }
+        
+        // Render timeline visualization
+        function renderTimeline() {
+            const canvas = document.getElementById('timeline-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas internal resolution to match display size
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            // Clear canvas
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw timeline background
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, canvas.height / 2 - 2, canvas.width, 4);
+
+            // Calculate time range in milliseconds
+            const timeRange = maxTime.getTime() - minTime.getTime();
+
+            // Draw detection events as dots
+            const detectionTypeMap = {};
+            detections.forEach(d => {
+                if (!detectionTypeMap[d.type]) {
+                    detectionTypeMap[d.type] = [];
+                }
+                detectionTypeMap[d.type].push(d);
+            });
+
+            // Draw dots for each detection type
+            Object.entries(detectionTypeMap).forEach(([type, dets], idx) => {
+                ctx.fillStyle = TYPE_COLORS[type];
+                dets.forEach(det => {
+                    const detTime = new Date(det.timestamp);
+                    const x = ((detTime.getTime() - minTime.getTime()) / timeRange) * canvas.width;
+                    const y = canvas.height / 2 + (idx - Object.keys(detectionTypeMap).length / 2) * 12;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            });
+
+            // Draw current playback position line
+            if (playbackCurrentTime !== null) {
+                ctx.strokeStyle = '#FFC107';
+                ctx.lineWidth = 2;
+                const x = ((playbackCurrentTime.getTime() - minTime.getTime()) / timeRange) * canvas.width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw start/end grab bars
+            const startPercent = (startTime.getTime() - minTime.getTime()) / timeRange;
+            const endPercent = (endTime.getTime() - minTime.getTime()) / timeRange;
+            const startX = startPercent * canvas.width;
+            const endX = endPercent * canvas.width;
+            
+            // Start grab bar
+            ctx.fillStyle = GRAB_BAR_COLOR;
+            ctx.fillRect(startX - GRAB_BAR_WIDTH / 2, 0, GRAB_BAR_WIDTH, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.fillText('▶', startX - 4, canvas.height - 5);
+            
+            // End grab bar
+            ctx.fillStyle = GRAB_BAR_COLOR;
+            ctx.fillRect(endX - GRAB_BAR_WIDTH / 2, 0, GRAB_BAR_WIDTH, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('◀', endX - 4, canvas.height - 5);
+        }
+        
+        // Initialize timeline mouse handlers
+        function initTimelineDragHandlers() {
+            const canvas = document.getElementById('timeline-canvas');
+            
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const timeRange = maxTime.getTime() - minTime.getTime();
+                
+                const startPercent = (startTime.getTime() - minTime.getTime()) / timeRange;
+                const endPercent = (endTime.getTime() - minTime.getTime()) / timeRange;
+                const startX = startPercent * canvas.width;
+                const endX = endPercent * canvas.width;
+                
+                if (Math.abs(x - startX) < GRAB_BAR_WIDTH * 2) {
+                    isDraggingStart = true;
+                    canvas.style.cursor = 'ew-resize';
+                } else if (Math.abs(x - endX) < GRAB_BAR_WIDTH * 2) {
+                    isDraggingEnd = true;
+                    canvas.style.cursor = 'ew-resize';
+                }
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                
+                if (isDraggingStart || isDraggingEnd) {
+                    const timeRange = maxTime.getTime() - minTime.getTime();
+                    const percent = Math.max(0, Math.min(1, x / canvas.width));
+                    const newTime = new Date(minTime.getTime() + percent * timeRange);
+                    
+                    if (isDraggingStart && newTime < endTime) {
+                        startTime = newTime;
+                        document.getElementById('start-datetime').value = formatDateTimeLocal(startTime);
+                    } else if (isDraggingEnd && newTime > startTime) {
+                        endTime = newTime;
+                        document.getElementById('end-datetime').value = formatDateTimeLocal(endTime);
+                    }
+                    
+                    renderTimeline();
+                    applyTimeFilter();
+                } else {
+                    // Hover detection
+                    const timeRange = maxTime.getTime() - minTime.getTime();
+                    const startPercent = (startTime.getTime() - minTime.getTime()) / timeRange;
+                    const endPercent = (endTime.getTime() - minTime.getTime()) / timeRange;
+                    const startX = startPercent * canvas.width;
+                    const endX = endPercent * canvas.width;
+                    
+                    if (Math.abs(x - startX) < GRAB_BAR_WIDTH * 2 || Math.abs(x - endX) < GRAB_BAR_WIDTH * 2) {
+                        canvas.style.cursor = 'pointer';
+                    } else {
+                        canvas.style.cursor = 'default';
+                    }
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                isDraggingStart = false;
+                isDraggingEnd = false;
+                canvas.style.cursor = 'default';
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                isDraggingStart = false;
+                isDraggingEnd = false;
+                canvas.style.cursor = 'default';
+            });
+        }
+
+        // Apply time filter and update detections
+        function applyTimeFilter() {
+            const startMs = startTime.getTime();
+            const endMs = endTime.getTime();
+            const filtered = [];
+
+            selectedCameras.forEach(camera => {
+                const typeMap = detectionIndex[camera];
+                if (!typeMap) return;
+
+                selectedTypes.forEach(type => {
+                    const bucket = typeMap[type];
+                    if (!bucket || !bucket.detections.length) return;
+
+                    const items = bucket.detections;
+                    const startIdx = lowerBoundByTime(items, startMs);
+                    const endIdx = upperBoundByTime(items, endMs);
+
+                    for (let i = startIdx; i < endIdx; i++) {
+                        filtered.push(items[i]);
+                    }
+                });
+            });
+
+            filteredDetections = filtered.sort((a, b) => a._timestampMs - b._timestampMs);
+            
+            console.log(`Filtered to ${filteredDetections.length} detections`);
+            
+            // Find intersections in the filtered dataset
+            const canvas = document.getElementById('overhead-canvas');
+            const rect = canvas.getBoundingClientRect();
+            vectorAnalyzer.findIntersections(filteredDetections, houselayer.cameras, rect.width, rect.height, temporalWindowMs);
+            currentIntersections = vectorAnalyzer.getFilteredIntersections(selectedCameras);
+            
+            renderTimeline();
+            renderOverheadView();
+            updateDetectionList();
+        }
+
+        // Update detection list below controls
+        function updateDetectionList() {
+            let listHtml = '<strong style="display: block; margin-bottom: 10px; font-size: 12px;">Filtered Events</strong>';
+            
+            // Use all filtered detections, not just last 10
+            const displayDetections = filteredDetections.slice().reverse();
+            
+            if (displayDetections.length === 0) {
+                listHtml += '<div style="color: #aaa; font-size: 11px; padding: 8px;">No events in selected time range</div>';
+            } else {
+                displayDetections.forEach((det, idx) => {
+                    const isSelected = selectedDetection && selectedDetection.id === det.id;
+                    const bgColor = isSelected ? '#1976D2' : 'transparent';
+                    const borderColor = isSelected ? '#fff' : '#555';
+                    
+                    listHtml += `
+                        <div class="detection-item" data-det-id="${det.id}" 
+                             style="
+                                 padding: 8px;
+                                 margin: 5px 0;
+                                 background: ${bgColor};
+                                 border: 1px solid ${borderColor};
+                                 border-radius: 4px;
+                                 cursor: pointer;
+                                 font-size: 11px;
+                                 transition: all 0.2s;
+                             ">
+                            <div><strong>${det.type}</strong> @ ${det.camera}</div>
+                            <div style="color: #aaa; font-size: 10px;">${new Date(det.timestamp).toLocaleString()}</div>
+                            <div style="color: #aaa; font-size: 10px;">Conf: ${(det.confidence * 100).toFixed(0)}%</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            const controlsDiv = document.getElementById('controls');
+            let detectionListDiv = document.getElementById('detection-list');
+            
+            if (!detectionListDiv) {
+                detectionListDiv = document.createElement('div');
+                detectionListDiv.id = 'detection-list';
+                detectionListDiv.style.cssText = `
+                    background: #2a2a2a;
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                    max-height: 400px;
+                    overflow-y: auto;
+                `;
+                controlsDiv.parentNode.insertBefore(detectionListDiv, controlsDiv.nextSibling);
+            }
+            
+            detectionListDiv.innerHTML = listHtml;
+            
+            // Add click handlers to detection items
+            detectionListDiv.querySelectorAll('.detection-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const detId = item.getAttribute('data-det-id');
+                    const detection = filteredDetections.find(d => d.id === detId);
+                    if (detection) {
+                        selectDetection(detection);
+                    }
+                });
+            });
+        }
+
+        // Helper function to map bounding box to image coordinates (used by both snapshot modals)
+        function mapBoundingBoxToImage(det, imageWidth, imageHeight) {
+            if (!det.bounding_box || det.bounding_box.length !== 4) return null;
+
+            let [x1, y1, x2, y2] = det.bounding_box.map(v => Number(v));
+            if ([x1, y1, x2, y2].some(v => !Number.isFinite(v))) return null;
+
+            const looksNormalized = [x1, y1, x2, y2].every(v => v >= 0 && v <= 1);
+            if (looksNormalized) {
+                x1 *= imageWidth;
+                x2 *= imageWidth;
+                y1 *= imageHeight;
+                y2 *= imageHeight;
+            } else if (det.region_size && det.region_size.length === 2) {
+                const regionWidth = Number(det.region_size[0]);
+                const regionHeight = Number(det.region_size[1]);
+                if (
+                    Number.isFinite(regionWidth) && regionWidth > 0 &&
+                    Number.isFinite(regionHeight) && regionHeight > 0 &&
+                    (x2 > imageWidth * 1.1 || y2 > imageHeight * 1.1)
+                ) {
+                    const scaleX = imageWidth / regionWidth;
+                    const scaleY = imageHeight / regionHeight;
+                    x1 *= scaleX;
+                    x2 *= scaleX;
+                    y1 *= scaleY;
+                    y2 *= scaleY;
+                }
+            }
+
+            const left = Math.max(0, Math.min(imageWidth, Math.min(x1, x2)));
+            const top = Math.max(0, Math.min(imageHeight, Math.min(y1, y2)));
+            const right = Math.max(0, Math.min(imageWidth, Math.max(x1, x2)));
+            const bottom = Math.max(0, Math.min(imageHeight, Math.max(y1, y2)));
+
+            const width = right - left;
+            const height = bottom - top;
+            if (width <= 0 || height <= 0) return null;
+
+            return { x: left, y: top, width, height };
+        }
+
+        // Select a detection and show its snapshot
+        function selectDetection(detection) {
+            selectedDetection = detection;
+            updateDetectionList();
+            
+            // Jump timeline to this detection
+            const detTime = new Date(detection.timestamp);
+            playbackCurrentTime = new Date(detTime);;
+            document.getElementById('playback-datetime').value = formatDateTimeLocal(detTime);
+            renderTimeline();
+            renderOverheadView();
+            
+            // Fetch and show snapshot
+            showDetectionSnapshot(detection);
+        }
+
+        // Show snapshot modal for detection
+        function showDetectionSnapshot(detection) {
+            const matchingDetections = detections.filter(d => d.id === detection.id && d.bounding_box && d.bounding_box.length === 4);
+
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            // Create content container
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: #2a2a2a;
+                border-radius: 8px;
+                padding: 20px;
+                max-width: 800px;
+                max-height: 90vh;
+                overflow: auto;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            `;
+
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '✕ Close';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                background: #f44336;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                z-index: 10001;
+            `;
+            closeBtn.addEventListener('click', () => modal.remove());
+
+            // Add detection info
+            const info = document.createElement('div');
+            info.style.cssText = `
+                color: #fff;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #555;
+                padding-bottom: 10px;
+            `;
+            info.innerHTML = `
+                <strong>Detection Details</strong><br>
+                Type: ${detection.type}<br>
+                Camera: ${detection.camera}<br>
+                Time: ${new Date(detection.timestamp).toLocaleString()}<br>
+                Confidence: ${(detection.confidence * 100).toFixed(1)}%<br>
+                Matching Boxes: ${matchingDetections.length}<br>
+                Bounding Box: [${detection.bounding_box.map(v => Number(v).toFixed(2)).join(', ')}]
+            `;
+
+            // Add canvas container for snapshot with bounding box
+            const canvasContainer = document.createElement('div');
+            canvasContainer.style.cssText = `
+                text-align: center;
+                color: #aaa;
+                position: relative;
+            `;
+            canvasContainer.innerHTML = '<p>Loading snapshot...</p>';
+
+            content.appendChild(closeBtn);
+            content.appendChild(info);
+            content.appendChild(canvasContainer);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // Fetch snapshot from proxy
+            const snapshotUrl = `/proxy/snapshot?eventId=${detection.id}`;
+            const img = new Image();
+
+            img.onload = () => {
+                // Create canvas to draw image + bounding box
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                canvas.style.cssText = `
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 4px;
+                    margin-top: 10px;
+                `;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Draw the snapshot image
+                ctx.drawImage(img, 0, 0);
+
+                const sortedMatching = matchingDetections
+                    .slice()
+                    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                sortedMatching.forEach((det, idx) => {
+                    const box = mapBoundingBoxToImage(det, img.width, img.height);
+                    if (!box) return;
+
+                    const isSelected = det === detection;
+                    const strokeColor = isSelected
+                        ? 'rgba(255, 235, 59, 1)'
+                        : (TYPE_COLORS[det.type] || 'rgba(255, 255, 255, 0.9)');
+                    const fillAlpha = isSelected ? 0.18 : 0.1;
+
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = isSelected ? 4 : 2;
+                    ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+                    const colorMatch = strokeColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                    if (colorMatch) {
+                        ctx.fillStyle = `rgba(${colorMatch[1]}, ${colorMatch[2]}, ${colorMatch[3]}, ${fillAlpha})`;
+                        ctx.fillRect(box.x, box.y, box.width, box.height);
+                    }
+
+                    const label = `${idx + 1}. ${det.type} ${(det.confidence * 100).toFixed(0)}%`;
+                    ctx.font = 'bold 13px Arial';
+                    const textMetrics = ctx.measureText(label);
+                    const textHeight = 18;
+                    const textPadding = 4;
+                    const labelY = Math.max(textHeight + 2, box.y);
+
+                    ctx.fillStyle = strokeColor;
+                    ctx.fillRect(
+                        box.x,
+                        labelY - textHeight,
+                        textMetrics.width + textPadding * 2,
+                        textHeight
+                    );
+
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText(label, box.x + textPadding, labelY - 4);
+                });
+                
+                // Replace loading text with canvas
+                canvasContainer.innerHTML = '';
+                canvasContainer.appendChild(canvas);
+            };
+            
+            img.onerror = () => {
+                canvasContainer.innerHTML = '<p style="color: #f44336;">Failed to load snapshot</p>';
+            };
+            
+            img.src = snapshotUrl;
+
+            // Close on outside click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Start playback
+        function startPlayback() {
+            if (isPlaying) return;
+            
+            playbackStart = new Date(startTime);
+            playbackEnd = new Date(endTime);
+            playbackCurrentTime = new Date(playbackStart);;
+            
+            isPlaying = true;
+            document.getElementById('play-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('start-datetime').disabled = true;
+            document.getElementById('end-datetime').disabled = true;
+            
+            const startTimeMs = playbackStart.getTime();
+            const endTimeMs = playbackEnd.getTime();
+            const playbackStartMs = Date.now();
+            
+            function animatePlayback() {
+                if (!isPlaying) return;
+                
+                const elapsedMs = Date.now() - playbackStartMs;
+                const progress = Math.min(elapsedMs / PLAYBACK_DURATION_MS, 1);
+                
+                playbackCurrentTime = new Date(startTimeMs + progress * (endTimeMs - startTimeMs));
+                
+                document.getElementById('playback-datetime').value = formatDateTimeLocal(playbackCurrentTime);
+                renderOverheadView();
+                renderTimeline();
+                
+                if (progress < 1) {
+                    playbackAnimationId = requestAnimationFrame(animatePlayback);
+                } else {
+                    stopPlayback();
+                    document.getElementById('playback-info').textContent = 'Playback complete';
+                }
+            }
+            
+            document.getElementById('playback-info').textContent = 'Playing...';
+            playbackAnimationId = requestAnimationFrame(animatePlayback);
+        }
+
+        // Stop playback
+        function stopPlayback() {
+            isPlaying = false;
+            if (playbackAnimationId) {
+                cancelAnimationFrame(playbackAnimationId);
+            }
+            document.getElementById('play-btn').disabled = false;
+            document.getElementById('pause-btn').disabled = true;
+            document.getElementById('start-datetime').disabled = false;
+            document.getElementById('end-datetime').disabled = false;
+            playbackCurrentTime = null;
+        }
+
+        // Render overhead view with filtered detections
+        function initOverheadCanvasClickHandler() {
+            const canvas = document.getElementById('overhead-canvas');
+            canvas.addEventListener('click', (e) => {
+                if (mapDragged) {
+                    mapDragged = false;
+                    return;
+                }
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const world = screenToWorld(x, y);
+                
+                // Find clicked intersection (within 15px radius)
+                const clickRadius = 15 / mapScale;
+                const clicked = currentIntersections.find(intersection => {
+                    const dist = Math.sqrt(
+                        Math.pow(world.x - intersection.x, 2) +
+                        Math.pow(world.y - intersection.y, 2)
+                    );
+                    return dist <= clickRadius;
+                });
+                
+                if (clicked) {
+                    showIntersectionDetails(clicked, filteredDetections);
+                }
+            });
+        }
+
+        function initOverheadPanZoomHandlers() {
+            const canvas = document.getElementById('overhead-canvas');
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const worldBefore = screenToWorld(mouseX, mouseY);
+                const zoomDelta = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+                const newScale = Math.min(8, Math.max(0.5, mapScale * zoomDelta));
+
+                mapScale = newScale;
+                mapOffsetX = mouseX - worldBefore.x * mapScale;
+                mapOffsetY = mouseY - worldBefore.y * mapScale;
+
+                renderOverheadView();
+            }, { passive: false });
+
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                isPanningMap = true;
+                mapDragged = false;
+                panLastX = e.clientX;
+                panLastY = e.clientY;
+                canvas.classList.add('panning');
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isPanningMap) return;
+
+                const dx = e.clientX - panLastX;
+                const dy = e.clientY - panLastY;
+                if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+                    mapDragged = true;
+                }
+
+                panLastX = e.clientX;
+                panLastY = e.clientY;
+                mapOffsetX += dx;
+                mapOffsetY += dy;
+
+                renderOverheadView();
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isPanningMap) return;
+                isPanningMap = false;
+                canvas.classList.remove('panning');
+            });
+        }
+        
+        // Show intersection details with snapshots
+        // Helper function to format timestamp for display
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const ms = String(date.getMilliseconds()).padStart(3, '0');
+            return `${hours}:${minutes}:${seconds}.${ms}`;
+        }
+
+        function showIntersectionDetails(intersection, allDetections) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                overflow-y: auto;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: #2a2a2a;
+                border-radius: 8px;
+                padding: 20px;
+                max-width: 1200px;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+                width: 90%;
+                position: relative;
+            `;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '✕ Close';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                background: #f44336;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                z-index: 10001;
+            `;
+            closeBtn.addEventListener('click', () => modal.remove());
+
+            const info = document.createElement('div');
+            info.style.cssText = `
+                color: #fff;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #555;
+                padding-bottom: 15px;
+            `;
+            const gpsCoords = intersection.lat && intersection.lng 
+                ? `<div style="margin-top: 10px; padding: 10px; background: #1a1a1a; border-radius: 4px; font-family: monospace;">
+                     <strong>📍 GPS Coordinates:</strong><br>
+                     Latitude: ${intersection.lat.toFixed(7)}°<br>
+                     Longitude: ${intersection.lng.toFixed(7)}°
+                   </div>`
+                : '';
+            
+            info.innerHTML = `
+                <h2 style="margin: 0 0 10px 0;">🎯 Vector Intersection</h2>
+                <strong>${intersection.cameras[0]}</strong> ↔ <strong>${intersection.cameras[1]}</strong><br>
+                Time Difference: ${(intersection.timeDiff / 1000).toFixed(1)}s<br>
+                Detection 1: ${intersection.detections[0].type} (${(intersection.detections[0].confidence * 100).toFixed(0)}%)<br>
+                Detection 2: ${intersection.detections[1].type} (${(intersection.detections[1].confidence * 100).toFixed(0)}%)
+                ${gpsCoords}
+            `;
+
+            const snapshotsContainer = document.createElement('div');
+            snapshotsContainer.style.cssText = `
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            `;
+
+            content.appendChild(closeBtn);
+            content.appendChild(info);
+            content.appendChild(snapshotsContainer);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // Load snapshots for both detections with bright green highlighting
+            intersection.detections.forEach((detection, detIdx) => {
+                const snapshotDiv = document.createElement('div');
+                snapshotDiv.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                `;
+                
+                const title = document.createElement('div');
+                title.style.cssText = `
+                    color: #fff;
+                    font-weight: bold;
+                    font-size: 14px;
+                    border-bottom: 2px solid #00ff00;
+                    padding-bottom: 8px;
+                `;
+                title.textContent = `${intersection.cameras[detIdx]}`;
+                snapshotDiv.appendChild(title);
+                
+                const canvasPlaceholder = document.createElement('div');
+                canvasPlaceholder.style.cssText = `
+                    text-align: center;
+                    color: #aaa;
+                    padding: 20px;
+                    background: #1a1a1a;
+                    border-radius: 4px;
+                `;
+                canvasPlaceholder.textContent = 'Loading snapshot...';
+                snapshotDiv.appendChild(canvasPlaceholder);
+                snapshotsContainer.appendChild(snapshotDiv);
+                
+                // Load snapshot image
+                const snapshotUrl = `/proxy/snapshot?eventId=${detection.id}`;
+                const img = new Image();
+                
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.style.cssText = `
+                        max-width: 100%;
+                        height: auto;
+                        border-radius: 4px;
+                        border: 2px solid #00ff00;
+                    `;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Find all detections from this camera within ±2 seconds of the snapshot
+                    const snapshotTime = new Date(detection.timestamp).getTime();
+                    const timeWindow = 2000; // ±2 seconds
+                    const cameraDetections = allDetections.filter(det => 
+                        det.camera === detection.camera &&
+                        Math.abs(new Date(det.timestamp).getTime() - snapshotTime) <= timeWindow
+                    );
+                    
+                    // First pass: Draw all detections in grey
+                    cameraDetections.forEach(det => {
+                        // Skip if this is one of the intersection detections (we'll draw those on top)
+                        if (intersection.detections.some(intDet => intDet.id === det.id)) return;
+                        
+                        const box = mapBoundingBoxToImage(det, img.width, img.height);
+                        if (!box) return;
+                        
+                        // Draw grey box
+                        ctx.strokeStyle = '#888888';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        ctx.fillStyle = 'rgba(136, 136, 136, 0.1)';
+                        ctx.fillRect(box.x, box.y, box.width, box.height);
+                        
+                        // Add label with type and timestamp
+                        const label = `${det.type} ${(det.confidence * 100).toFixed(0)}%`;
+                        const timeLabel = formatTimestamp(det.timestamp);
+                        ctx.font = 'bold 11px Arial';
+                        
+                        const textMetrics = ctx.measureText(label);
+                        const timeMetrics = ctx.measureText(timeLabel);
+                        const maxWidth = Math.max(textMetrics.width, timeMetrics.width);
+                        const textHeight = 14;
+                        const textPadding = 3;
+                        const labelY = Math.max(textHeight * 2 + 2, box.y);
+                        
+                        // Background for label
+                        ctx.fillStyle = 'rgba(136, 136, 136, 0.9)';
+                        ctx.fillRect(
+                            box.x,
+                            labelY - textHeight * 2,
+                            maxWidth + textPadding * 2,
+                            textHeight * 2
+                        );
+                        
+                        // Type label
+                        ctx.fillStyle = '#fff';
+                        ctx.fillText(label, box.x + textPadding, labelY - textHeight - 2);
+                        
+                        // Timestamp
+                        ctx.font = '10px Arial';
+                        ctx.fillStyle = '#ddd';
+                        ctx.fillText(timeLabel, box.x + textPadding, labelY - 2);
+                    });
+                    
+                    // Second pass: Draw intersection detections on top (highlighted)
+                    intersection.detections.forEach((det, idx) => {
+                        const box = mapBoundingBoxToImage(det, img.width, img.height);
+                        if (!box) return;
+                        
+                        // Current detection gets bright green, others get yellow
+                        const isCurrentDet = (det.id === detection.id);
+                        const strokeColor = isCurrentDet ? '#00ff00' : '#ffeb3b';
+                        const lineWidth = isCurrentDet ? 4 : 2;
+                        const fillAlpha = isCurrentDet ? 0.25 : 0.1;
+                        
+                        ctx.strokeStyle = strokeColor;
+                        ctx.lineWidth = lineWidth;
+                        ctx.strokeRect(box.x, box.y, box.width, box.height);
+                        
+                        if (isCurrentDet) {
+                            ctx.fillStyle = `rgba(0, 255, 0, ${fillAlpha})`;
+                        } else {
+                            ctx.fillStyle = `rgba(255, 235, 59, ${fillAlpha})`;
+                        }
+                        ctx.fillRect(box.x, box.y, box.width, box.height);
+                        
+                        // Add label with type and timestamp
+                        const label = `${det.type} ${(det.confidence * 100).toFixed(0)}%`;
+                        const timeLabel = formatTimestamp(det.timestamp);
+                        ctx.font = 'bold 13px Arial';
+                        
+                        const textMetrics = ctx.measureText(label);
+                        const timeMetrics = ctx.measureText(timeLabel);
+                        const maxWidth = Math.max(textMetrics.width, timeMetrics.width);
+                        const textHeight = 16;
+                        const textPadding = 4;
+                        const labelY = Math.max(textHeight * 2 + 2, box.y);
+                        
+                        // Background for label
+                        ctx.fillStyle = strokeColor;
+                        ctx.fillRect(
+                            box.x,
+                            labelY - textHeight * 2,
+                            maxWidth + textPadding * 2,
+                            textHeight * 2
+                        );
+                        
+                        // Type label
+                        ctx.fillStyle = '#000';
+                        ctx.fillText(label, box.x + textPadding, labelY - textHeight - 2);
+                        
+                        // Timestamp
+                        ctx.font = '11px Arial';
+                        ctx.fillStyle = '#000';
+                        ctx.fillText(timeLabel, box.x + textPadding, labelY - 2);
+                    });
+                    
+                    canvasPlaceholder.parentNode.replaceChild(canvas, canvasPlaceholder);
+                };
+                
+                img.onerror = () => {
+                    canvasPlaceholder.textContent = 'Failed to load snapshot';
+                    canvasPlaceholder.style.color = '#f44336';
+                };
+                
+                img.src = snapshotUrl;
+            });
+
+            // Close on outside click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Render overhead view with filtered detections
+        function renderOverheadView() {
+            const canvas = document.getElementById('overhead-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!houselayer || !houselayer.cameras) {
+                document.getElementById('stats').textContent = 'No camera data available.';
+                return;
+            }
+
+            const cameras = houselayer.cameras;
+            let minLat = Infinity, maxLat = -Infinity;
+            let minLng = Infinity, maxLng = -Infinity;
+
+            Object.values(cameras).forEach(cam => {
+                if (cam.lat < minLat) minLat = cam.lat;
+                if (cam.lat > maxLat) maxLat = cam.lat;
+                if (cam.lng < minLng) minLng = cam.lng;
+                if (cam.lng > maxLng) maxLng = cam.lng;
+            });
+
+            const latPadding = (maxLat - minLat) * 0.2 || 0.0001;
+            const lngPadding = (maxLng - minLng) * 0.2 || 0.0001;
+            minLat -= latPadding;
+            maxLat += latPadding;
+            minLng -= lngPadding;
+            maxLng += lngPadding;
+
+            function latLngToCanvas(lat, lng) {
+                const x = ((lng - minLng) / (maxLng - minLng)) * canvas.width;
+                const y = canvas.height - ((lat - minLat) / (maxLat - minLat)) * canvas.height;
+                return { x, y };
+            }
+
+            ctx.save();
+            ctx.setTransform(mapScale, 0, 0, mapScale, mapOffsetX, mapOffsetY);
+
+            // Draw detection vectors
+            const vectorLengthMeters = 33;
+            const PULSE_WINDOW_MS = 1000;
+            
+            // Get frame dimensions from houselayer or use common resolution
+            // Most cameras are 704 or similar width; we'll use a default and it can be overridden per camera
+            const getFrameWidth = (cameraName) => {
+                const cam = houselayer.cameras[cameraName];
+                return cam && cam.frameWidth ? cam.frameWidth : 704; // Default fallback
+            };
+            
+            filteredDetections.forEach((detection, idx) => {
+                const camera = cameras[detection.camera];
+                if (!camera) return;
+
+                const detectionTime = new Date(detection.timestamp);
+                const isSelected = selectedDetection && selectedDetection.id === detection.id;
+                
+                // Check if this detection is within the pulse window
+                let isPulsing = false;
+                if (playbackCurrentTime !== null) {
+                    const timeDiff = Math.abs(playbackCurrentTime.getTime() - detectionTime.getTime());
+                    isPulsing = timeDiff <= PULSE_WINDOW_MS;
+                }
+                
+                // Get unique color for this detection ID
+                let color = getDetectionColor(detection.id, detection.type);
+                let lineWidth = 2;
+                
+                // Pulse effect: white with thicker line when within 1 second
+                if (isPulsing) {
+                    color = 'rgba(255, 255, 255, 1)';
+                    lineWidth = 4;
+                }
+                
+                // Highlight selected detection in bright yellow
+                if (isSelected) {
+                    color = 'rgba(255, 235, 59, 1)';
+                    lineWidth = 5;
+                }
+                
+                // Calculate box center from bounding box directly
+                const [x1, y1, x2, y2] = detection.bounding_box;
+                const boxCenterXPixels = (x1 + x2) / 2.0;
+                const boxCenterYPixels = (y1 + y2) / 2.0;
+                
+                // Normalize to 0.0-1.0 based on frame width
+                const frameWidth = getFrameWidth(detection.camera);
+                const boxCenterX = boxCenterXPixels / frameWidth;
+                const boxCenterY = boxCenterYPixels / frameWidth; // Use same denominator for aspect
+                
+                const fov = camera.fov || 140;
+                const cameraOrientation = camera.orientation || 0;
+                
+                // Map box_center to heading within camera's FOV
+                // boxCenterX = 0.0 (left edge) → orientation - fov/2
+                // boxCenterX = 1.0 (right edge) → orientation + fov/2
+                // Formula: heading = orientation - fov/2 + boxCenterX * fov
+                const heading = cameraOrientation - (fov / 2) + (boxCenterX * fov);
+
+                const headingRad = heading * Math.PI / 180;
+                const R = 6378137;
+                const dLat = (vectorLengthMeters * Math.cos(headingRad)) / R * (180 / Math.PI);
+                const dLng = (vectorLengthMeters * Math.sin(headingRad)) / (R * Math.cos(camera.lat * Math.PI / 180)) * (180 / Math.PI);
+                
+                const endLat = camera.lat + dLat;
+                const endLng = camera.lng + dLng;
+
+                const start = latLngToCanvas(camera.lat, camera.lng);
+                const end = latLngToCanvas(endLat, endLng);
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+
+                // Draw arrowhead
+                const arrowSize = (isPulsing || isSelected) ? 12 : 8;
+                const arrowAngle = Math.atan2(end.y - start.y, end.x - start.x);
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(end.x, end.y);
+                ctx.lineTo(
+                    end.x - arrowSize * Math.cos(arrowAngle - Math.PI / 6),
+                    end.y - arrowSize * Math.sin(arrowAngle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    end.x - arrowSize * Math.cos(arrowAngle + Math.PI / 6),
+                    end.y - arrowSize * Math.sin(arrowAngle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw heading text label
+                const normalizedHeading = ((heading % 360) + 360) % 360; // Normalize to 0-360
+                const headingText = `${Math.round(normalizedHeading)}°`;
+                ctx.font = 'bold 9px Arial';
+                ctx.fillStyle = color;
+                
+                // Position text near the middle of the vector with offset
+                const midX = (start.x + end.x) / 2;
+                const midY = (start.y + end.y) / 2;
+                
+                // Offset text perpendicular to the vector direction
+                const offsetDistance = 8;
+                const perpAngle = arrowAngle + Math.PI / 2;
+                const textX = midX + offsetDistance * Math.cos(perpAngle);
+                const textY = midY + offsetDistance * Math.sin(perpAngle);
+                
+                // Draw text background for readability
+                const textMetrics = ctx.measureText(headingText);
+                const textPadding = 2;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(
+                    textX - textMetrics.width / 2 - textPadding,
+                    textY - 6 - textPadding,
+                    textMetrics.width + textPadding * 2,
+                    10 + textPadding * 2
+                );
+                
+                // Draw text
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.fillText(headingText, textX, textY + 2);
+            });
+
+            // Draw intersection points
+            currentIntersections.forEach((intersection, idx) => {
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.6)'; // Bright green with transparency
+                ctx.beginPath();
+                ctx.arc(intersection.x, intersection.y, 10, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Add intersection number label
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText((idx + 1).toString(), intersection.x, intersection.y);
+            });
+
+            // Draw cameras
+            Object.entries(cameras).forEach(([name, camera]) => {
+                const pos = latLngToCanvas(camera.lat, camera.lng);
+                
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#2196F3';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(name.replace('_cam', ''), pos.x, pos.y - 10);
+            });
+
+            ctx.restore();
+
+            const typeCount = {};
+            filteredDetections.forEach(d => {
+                typeCount[d.type] = (typeCount[d.type] || 0) + 1;
+            });
+            const statsText = `${filteredDetections.length} detections | ` + 
+                Object.entries(typeCount).map(([type, count]) => `${type}: ${count}`).join(' | ');
+            document.getElementById('stats').textContent = statsText;
+        }
+
+        // Event listeners
+        document.getElementById('start-datetime').addEventListener('change', (e) => {
+            startTime = new Date(e.target.value);
+            renderTimeline();
+            applyTimeFilter();
+        });
+
+        document.getElementById('end-datetime').addEventListener('change', (e) => {
+            endTime = new Date(e.target.value);
+            renderTimeline();
+            applyTimeFilter();
+        });
+
+        document.getElementById('play-btn').addEventListener('click', startPlayback);
+        document.getElementById('pause-btn').addEventListener('click', stopPlayback);
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            stopPlayback();
+            playbackCurrentTime = null;
+            document.getElementById('playback-datetime').value = '';
+            document.getElementById('playback-info').textContent = 'Stopped';
+            applyTimeFilter();
+        });
+        document.getElementById('reset-filter').addEventListener('click', () => {
+            resetTimeFilter();
+            applyTimeFilter();
+            document.getElementById('playback-info').textContent = 'Ready';
+        });
+        document.getElementById('reload-timeline').addEventListener('click', loadData);
+        document.getElementById('temporal-window-slider').addEventListener('input', (e) => {
+            temporalWindowMs = Number(e.target.value);
+            document.getElementById('temporal-window-value').textContent = `${temporalWindowMs} ms`;
+            applyTimeFilter();
+        });
+        document.getElementById('frigate-login-btn').addEventListener('click', () => {
+            showFrigateLoginModal();
+        });
+
+        // Initial load
+        loadData();
+        initTimelineDragHandlers();
+        initOverheadCanvasClickHandler();
+        initOverheadPanZoomHandlers();
+    </script>
+</body>
+</html>

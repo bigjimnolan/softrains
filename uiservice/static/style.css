@@ -655,3 +655,251 @@ body.softrains-theme h1 { display: none; }
 .nav-toggle-input:checked ~ .nav-toggle-slider .nav-toggle-icon-right {
   opacity: 0.6;
 }
+
+/* === Frigate Login Modal === */
+.frigate-login-btn {
+  padding: 0.5em 1em;
+  margin-right: 1em;
+  background-color: #5a7d5e;
+  color: #e0e0e0;
+  border: 2px solid #3d5241;
+  border-radius: 2px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.3);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.frigate-login-btn:hover {
+  background-color: #6b9e6e;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 3px 6px rgba(0,0,0,0.4);
+}
+
+.frigate-login-btn:active {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* === Frigate Login Modal === */
+.frigate-login-modal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(20, 25, 25, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.frigate-login-modal-content {
+  background-color: #2d2d2d;
+  border: 3px solid #5a7d5e;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  width: 90%;
+  max-width: 480px;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+}
+
+.frigate-login-modal-title {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #a8d5a8;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+}
+
+.frigate-login-modal-subtitle {
+  margin-bottom: 1.5em;
+  font-size: 0.85em;
+  color: #888;
+  font-style: italic;
+  margin-top: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.frigate-login-form-group {
+  margin-bottom: 1.2em;
+}
+
+.frigate-login-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  font-size: 0.9em;
+  color: #a8d5a8;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.frigate-login-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 0;
+  border: 2px solid #5a7d5e;
+  background-color: #1a1a1a;
+  color: #a8d5a8;
+  box-sizing: border-box;
+  font-size: 0.95em;
+  font-family: 'Courier New', monospace;
+  transition: all 0.2s ease;
+}
+
+.frigate-login-input::placeholder {
+  color: #555;
+}
+
+.frigate-login-input:focus {
+  outline: none;
+  border-color: #7da864;
+  box-shadow: 0 0 4px rgba(168, 213, 168, 0.3);
+  background-color: #1a1a1a;
+}
+
+.frigate-login-error {
+  color: #c17d5e;
+  margin-bottom: 16px;
+  display: none;
+  font-size: 0.9em;
+  border-left: 3px solid #c17d5e;
+  padding-left: 8px;
+  font-family: 'Courier New', monospace;
+}
+
+.frigate-login-error.show {
+  display: block;
+}
+
+.frigate-login-memo {
+  background-color: #1a1a1a;
+  border: 1px solid #5a5a5a;
+  padding: 12px;
+  margin-bottom: 1.5em;
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+.frigate-login-memo-title {
+  color: #888;
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.frigate-login-memo-content {
+  color: #777;
+  font-style: italic;
+  font-family: 'Courier New', monospace;
+  line-height: 1.5;
+}
+
+.frigate-login-button-container {
+  display: flex;
+  gap: 10px;
+}
+
+.frigate-login-btn-submit,
+.frigate-login-btn-cancel {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid;
+  background-color: #5a7d5e;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.frigate-login-btn-submit {
+  border-color: #3d5241;
+  background-color: #5a7d5e;
+}
+
+.frigate-login-btn-submit:hover {
+  background-color: #6b9e6e;
+  box-shadow: 0 2px 8px rgba(107, 158, 110, 0.3);
+}
+
+.frigate-login-btn-submit:active {
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.frigate-login-btn-cancel {
+  border-color: #5a4d4d;
+  background-color: #665555;
+}
+
+.frigate-login-btn-cancel:hover {
+  background-color: #7a6b6b;
+  box-shadow: 0 2px 8px rgba(122, 107, 107, 0.3);
+}
+
+/* === Event Popup Styling === */
+.event-popup-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 120px;
+  background-color: #1a1a1a;
+  border: 2px solid #5a7d5e;
+  padding: 12px;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(168, 213, 168, 0.1);
+}
+
+.event-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.event-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.8em;
+}
+
+.event-zone-icon,
+.event-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.event-zone-icon:hover,
+.event-type-icon:hover {
+  transform: scale(1.15);
+}
+
+.event-time {
+  font-size: 0.75em;
+  color: #888;
+  font-style: italic;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.event-snapshot {
+  max-width: 180px;
+  max-height: 120px;
+  border: 2px solid #5a7d5e;
+  box-shadow: inset 0 1px 0 rgba(168, 213, 168, 0.1);
+}

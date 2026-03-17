@@ -25,9 +25,12 @@
         v: "beta"
       });
     </script>
+    <script src="/static/frigate-login.js"></script>
     <script src="/static/maps-render.js"></script>
   </head>
   <body class="softrains-theme">
+    <!-- Container for Frigate login modal -->
+    <div id="frigate-modal-container"></div>
     <div class="dashboard-header-bar">
       <div class="dashboard-logo-wrap">
         <img src="/static/images/logo.svg" alt="SoftRains Logo" class="dashboard-logo">
@@ -45,6 +48,7 @@
         });
       </script>
       <div class="theme-toggle-group">
+        <button id="frigate-login-btn" class="frigate-login-btn" title="Login to Frigate">🔐 Frigate Login</button>
         <label class="theme-toggle-label" for="theme-toggle">
           <input type="checkbox" id="theme-toggle">
           <span>SoftRains Theme</span>
@@ -53,5 +57,8 @@
     </div>
     <h1>Camera Map</h1>
     <div id="map"></div>
+    <script>
+      document.getElementById('frigate-login-btn').addEventListener('click', showFrigateLoginModal);
+    </script>
   </body>
 </html>

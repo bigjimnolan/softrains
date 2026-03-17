@@ -53,6 +53,7 @@ COPY --from=builder /app/docker/scripts/startup.sh /app/startup.sh
 # Copy UI static and templates directories
 COPY --from=builder /app/uiservice/static /app/static
 COPY --from=builder /app/uiservice/templates /app/templates
+COPY --from=builder /app/salespage /app/salespage
 
 # Make the startup script executable
 RUN chmod +x /app/startup.sh

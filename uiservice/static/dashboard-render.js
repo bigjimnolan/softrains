@@ -167,9 +167,25 @@ function hashString(str) {
 }
 
 
+// Helper to get zone icons from localStorage
+function getZoneIconsFromLocalStorage() {
+  try {
+    const prefs = JSON.parse(localStorage.getItem('softrainsZoneTypePrefs') || '{}');
+    if (prefs && typeof prefs === 'object') {
+      // Each key is a zone name, each value is an icon
+      return Object.entries(prefs).map(([name, icon]) => ({ icon, name }));
+    }
+  } catch (e) {
+    console.error('Error parsing softrainsZoneTypePrefs from localStorage:', e);
+  }
+  return [];
+}
+
+// Get icons for zone and detection type from localStorage prefs
+const zoneIcons = getZoneIconsFromLocalStorage();
+
 // Unified icon list for the project
 const ICONS = {
-
   person: "🧑",
   dog: "🐕",
   cat: "🐈",
@@ -283,6 +299,11 @@ const shapeKeys = ["circle", "square", "triangle", "ellipse", "diamond"];
 
 function getSymbolForKey(key) {
   key = String(key ?? "");
+  // Check localStorage preferences first
+  if (zoneIcons.length) {
+    const z = zoneIcons.find(z => z.name === key);
+    if (z) return z.icon;
+  }
   // Try direct match in ICONS
   if (ICONS[key]) {
     if (typeof ICONS[key] === "function") return ICONS[key](colors[0]);
@@ -474,6 +495,7 @@ function openZoneTypeModal() {
   // Gather unique values for every field in actions and devices
   const actions = window.softrainsData.actions || [];
   const devices = Object.values(window.softrainsData.devices || {});
+  const cameras = window.softrainsData.cameras || {};
   const prefs = JSON.parse(localStorage.getItem("softrainsZoneTypePrefs") || "{}");
   const iconChoices = Object.entries(ICONS)
     .filter(([k, v]) => typeof v === "string")
@@ -486,6 +508,19 @@ function openZoneTypeModal() {
       if (obj[field]) set.add(String(obj[field]));
     });
     return set;
+  }
+
+  // Collect all zone names from cameras
+  function collectZones() {
+    const zones = new Set();
+    Object.values(cameras).forEach(camera => {
+      if (camera.zones && typeof camera.zones === 'object') {
+        Object.keys(camera.zones).forEach(zoneName => {
+          zones.add(zoneName);
+        });
+      }
+    });
+    return zones;
   }
 
   // List of fields to manage for actions and devices
@@ -504,27 +539,35 @@ function openZoneTypeModal() {
     APIId: '🔑',
     DeviceURL: '🔗',
     DeviceBackoff: '⏳',
-    Notes: '📝'
+    Notes: '📝',
+    zones: '📍'
   };
 
   // --- Toggle state for each field ---
   const fieldToggles = {};
-  [...actionFields, ...deviceFields].forEach(f => fieldToggles[f] = true);
+  [...actionFields, ...deviceFields, 'zones'].forEach(f => fieldToggles[f] = true);
 
   // --- Toggle filter controls ---
   let html = '<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">';
   // Add power switch icon for "show all" toggle
   html += `<span id="toggle-all-fields" title="Show all fields" style="cursor:pointer;font-size:1.5em;opacity:1;transition:opacity 0.2s;">&#128268;</span>`;
   // (Removed from here; will add as a button to the right controls below)
-  [...actionFields, ...deviceFields].forEach(field => {
+  [...actionFields, ...deviceFields, 'zones'].forEach(field => {
     const icon = FIELD_ICONS[field] || '❓';
     html += `<span class="field-toggle" data-field="${field}" style="cursor:pointer;font-size:1.5em;opacity:1;transition:opacity 0.2s;">${icon}</span>`;
   });
   html += '</div>';
 
   // --- All mappings, grouped by field ---
-  [...actionFields, ...deviceFields].forEach(field => {
-    const values = field.startsWith('Device') ? collectUnique(devices, field) : collectUnique(actions, field);
+  [...actionFields, ...deviceFields, 'zones'].forEach(field => {
+    let values;
+    if (field === 'zones') {
+      values = collectZones();
+    } else if (field.startsWith('Device')) {
+      values = collectUnique(devices, field);
+    } else {
+      values = collectUnique(actions, field);
+    }
     if (values.size > 0) {
       html += `<div class="field-mapping-group" data-field-group="${field}"><strong>${field}</strong><ul>`;
       values.forEach(val => {
@@ -703,13 +746,7 @@ function saveZoneTypePrefs() {
   }
 }
 
-// Optionally, update getSymbolForKey to check prefs first:
-const origGetSymbolForKey = getSymbolForKey;
-window.getSymbolForKey = function (key) {
-  const prefs = JSON.parse(localStorage.getItem("softrainsZoneTypePrefs") || "{}");
-  if (prefs[key]) return prefs[key];
-  return origGetSymbolForKey(key);
-};
+
 
 // Place this after your DOMContentLoaded or at the end of your JS files
 document.addEventListener("DOMContentLoaded", function () {

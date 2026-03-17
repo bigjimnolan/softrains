@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: softrains
+  namespace: softrains
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: softrains
+  template:
+    metadata:
+      labels:
+        app: softrains
+    spec:
+      containers:
+      - name: softrains
+        image: softrains:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SOFTRAINS_CONFIG_FILE
+          value: /app/config/softrains.json
+        - name: HUBITAT_ACCESS_TOKEN_52
+          valueFrom:
+            secretKeyRef:
+              name: softrains-secrets
+              key: HUBITAT_ACCESS_TOKEN_52
+        - name: HUBITAT_ACCESS_TOKEN_132
+          valueFrom:
+            secretKeyRef:
+              name: softrains-secrets
+              key: HUBITAT_ACCESS_TOKEN_132
+        - name: GOOGLE_MAPS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: softrains-secrets
+              key: GOOGLE_MAPS_API_KEY
+        ports:
+        - name: https
+          containerPort: 8443
+          hostPort: 8443
+          protocol: TCP
+        volumeMounts:
+        - name: softrains-config
+          mountPath: /app/config
+      volumes:
+      - name: softrains-config
+        hostPath:
+          path: /opt/softrains/config
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: softrains
+  namespace: softrains
+spec:
+  selector:
+    app: softrains
+  ports:
+  - name: https
+    port: 8443
+    targetPort: 8443
+    protocol: TCP
+  type: ClusterIP

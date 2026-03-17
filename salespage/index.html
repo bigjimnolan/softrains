@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoftRains | A Lifetime of Tomorrow</title>
+    <style>
+        :root {
+            /* Pallid, thin, drained colors (Useless Optimism Palette) */
+            --text-main: #9aa5ac;
+            --accent-green: #6b8e76; /* Dusty sage */
+            --accent-red: #a86f6f;   /* Dried clay */
+            --panel-bg: rgba(28, 30, 32, 0.75);       
+            --border-color: rgba(44, 49, 53, 0.8);   
+            --font-mono: 'Courier New', Courier, monospace;
+            --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            overflow-x: hidden;
+            font-weight: 300; 
+            background: linear-gradient(rgba(20, 21, 22, 0.85), rgba(20, 21, 22, 0.95)), url('softrains-cover.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .terminal-text { font-family: var(--font-mono); color: var(--accent-green); font-weight: normal; }
+        .alert-text { color: var(--accent-red); font-weight: bold; opacity: 0.85; }
+        
+        header {
+            background-color: rgba(28, 30, 32, 0.85);
+            border-bottom: 1px solid var(--accent-green);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px); 
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container img {
+            height: 45px;
+            width: auto;
+            opacity: 0.8;
+            filter: drop-shadow(0px 0px 2px rgba(107, 142, 118, 0.2));
+        }
+
+        .logo-text {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            font-weight: normal;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0.9;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-main);
+            text-decoration: none;
+            margin-left: 2.5rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.4s, opacity 0.4s;
+            opacity: 0.7;
+        }
+
+        nav a:hover { color: var(--accent-green); opacity: 1; }
+
+        nav a.github-btn {
+            border: 1px solid var(--accent-green);
+            padding: 0.5rem 1rem;
+            border-radius: 2px;
+            color: var(--accent-green);
+            font-family: var(--font-mono);
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        nav a.github-btn:hover {
+            background-color: var(--accent-green);
+            color: #1c1e20;
+            opacity: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 10rem 5% 6rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            font-weight: 400;
+            color: #bdc5ca;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 650px;
+            margin: 0 auto 2rem;
+            color: #7f8a93;
+            line-height: 1.8;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+        }
+
+        /* Telemetry Ticker */
+        .telemetry-wrapper {
+            background-color: rgba(15, 16, 17, 0.9);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2rem 5%;
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            min-height: 180px;
+            align-items: center;
+        }
+
+        .telemetry-content {
+            width: 100%;
+            max-width: 800px;
+            font-family: var(--font-mono);
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .telemetry-header {
+            color: var(--accent-green);
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+        }
+
+        .tel-user-line {
+            display: flex;
+            justify-content: space-between;
+            color: #8c979d;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .tel-comment {
+            color: #bdc5ca;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            font-family: var(--font-sans);
+            font-style: italic;
+        }
+
+        .tel-response {
+            color: var(--accent-green);
+            font-size: 0.85rem;
+            background: rgba(107, 142, 118, 0.1);
+            padding: 0.5rem 1rem;
+            border-left: 2px solid var(--accent-green);
+        }
+
+        /* General Sections */
+        .section { padding: 5rem 5%; }
+        .section-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 4rem;
+            font-family: var(--font-mono);
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            opacity: 0.8;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Software Section */
+        .software-showcase {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(3px);
+        }
+
+        .sw-feature {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            margin-bottom: 5rem;
+        }
+
+        .sw-feature:nth-child(even) { flex-direction: row-reverse; }
+        .sw-feature img { 
+            width: 50%; 
+            border: 1px solid var(--border-color); 
+            border-radius: 2px;
+            opacity: 0.85; 
+            filter: grayscale(20%) contrast(90%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .sw-text { width: 50%; }
+        .sw-text p { color: #7f8a93; font-size: 0.95rem; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .sw-text h3 { margin-bottom: 1rem; font-size: 1.1rem; letter-spacing: 1px;}
+
+        /* Grid Layouts for Hardware */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            transition: border-color 0.5s;
+            backdrop-filter: blur(3px);
+        }
+
+        .card:hover {
+            border-color: var(--accent-green);
+        }
+
+        .card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+            filter: sepia(10%) desaturate(30%); 
+            transition: opacity 0.3s ease-in-out;
+            cursor: crosshair;
+        }
+
+        .card-content { padding: 2rem; }
+        .card-content h3 { margin-bottom: 1rem; font-family: var(--font-mono); font-size: 1rem; color: #a1adb5;}
+        .card-content p { font-size: 0.9rem; color: #7f8a93; line-height: 1.7; }
+
+        /* Sketchy Contact Form */
+        .sketchy-form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(17, 18, 19, 0.85);
+            border: 1px solid var(--accent-red);
+            padding: 3rem;
+            font-family: var(--font-mono);
+            opacity: 0.95;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .sketchy-form-container p { font-size: 0.8rem; margin-bottom: 2rem; }
+
+        .form-group { margin-bottom: 2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--accent-red); font-size: 0.85rem;}
+        .form-group input, .form-group textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent-green);
+            padding: 0.5rem 0;
+            font-family: var(--font-mono);
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus { 
+            outline: none; 
+            border-bottom-color: var(--accent-green); 
+        }
+
+        button {
+            background-color: transparent;
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            padding: 1rem 2rem;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.4s;
+            font-size: 0.9rem;
+            backdrop-filter: blur(2px);
+        }
+
+        button:hover { background-color: var(--accent-green); color: #111; }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: #4a5258;
+            background: rgba(13, 14, 15, 0.9);
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            header, .hero, .telemetry-wrapper, .products, .software-showcase { display: none; }
+            .sketchy-form-container { border: 2px solid black; max-width: 100%; box-shadow: none; background: white; backdrop-filter: none;}
+            .form-group input, .form-group textarea { border-bottom: 1px solid black; color: black; }
+            .alert-text, label { color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img src="logo.svg" alt="SoftRains Logo">
+            <span class="logo-text">SoftRains_</span>
+        </div>
+        <nav>
+            <a href="#software">Systems</a>
+            <a href="#hardware">Hardware</a>
+            <a href="#contact">Terminal_Access</a>
+            <a href="https://github.com/bigjimnolan/softrains" target="_blank" rel="noopener noreferrer" class="github-btn">Source_Archive</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>A Lifetime of Security. Starting Today.</h1>
+        <p>Plant your roots. Secure your perimeter. Rest easy with our 100-Year Ironclad Warranty. Because true peace of mind means planning for a future, no matter what the broadcasts say about next week.</p>
+        <span class="terminal-text">> SYSTEM_STATUS: AWAITING_TOMORROW</span>
+    </section>
+
+    <div class="telemetry-wrapper">
+        <div class="telemetry-content" id="telemetryBox">
+            <div class="telemetry-header">> PUBLIC_TELEMETRY_ARCHIVE // USER_FEEDBACK_LOG</div>
+            <div class="tel-user-line">
+                <span id="telUser">Loading...</span>
+                <span id="telDate">--/--/----</span>
+            </div>
+            <div class="tel-comment" id="telComment">Initializing local archive records...</div>
+            <div class="tel-response" id="telResponse">SR_SYSTEM: PLEASE STAND BY.</div>
+        </div>
+    </div>
+
+    <section id="software" class="section software-showcase">
+        <h2 class="section-title">Overseer OS</h2>
+        
+        <div class="sw-feature">
+            <img src="detection-vectors.png" alt="Detection Vectors">
+            <div class="sw-text">
+                <h3 class="terminal-text">Generational Data Archiving</h3>
+                <p>Track everything moving through your property with absolute precision. Our spatial vectoring identifies and logs moving bodies, storing up to 50 years of telemetry data. For when you need to review a lifetime of quiet moments.</p>
+            </div>
+        </div>
+
+        <div class="sw-feature">
+            <img src="3d-property-coverage.png" alt="3D Property Coverage">
+            <div class="sw-text">
+                <h3 class="terminal-text">XL(R)IDAR Grid Mapping</h3>
+                <p>Absolute geographic permanence. SoftRains plots your structures and surrounding foliage, calculating blind spots and automatically deploying assets. Even if the landscape changes overnight, your map remains pristine.</p>
+            </div>
+        </div>
+
+        <div class="sw-feature">
+            <img src="secure-local-authentication.png" alt="Frigate Auth">
+            <div class="sw-text">
+                <h3 class="terminal-text">Immutable Local Authentication</h3>
+                <p>No cloud. No external dependencies. No outside world required. Complete Frigate integration with localized, hard-wired authentication ensures that your home only answers to you, long after the servers go dark.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="hardware" class="section products">
+        <h2 class="section-title">Enduring Assets</h2>
+        <div class="grid">
+            
+            <div class="card">
+                <img src="sentry-node-aspirational.png" 
+                     onmouseover="this.src='sentry-node-aspirational2.png'" 
+                     onmouseout="this.src='sentry-node-aspirational.png'" 
+                     alt="Wall Mounted Sentry Node">
+                <div class="card-content">
+                    <h3>Sentry Node v2.1</h3>
+                    <p>Guaranteed to outlast your mortgage. Features a head-mounted targeting laser and low-light sensing optics. It watches the tree line tirelessly, century after century, so you don't have to.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="automated-hydrogarden.png" 
+                     onmouseover="this.src='automated-hydrogarden2.png'" 
+                     onmouseout="this.src='automated-hydrogarden.png'" 
+                     alt="Automated Hydro-Garden">
+                <div class="card-content">
+                    <h3>Botanical Sustenance Pod</h3>
+                    <p>Ensure an endless harvest. This self-contained sink cultivates *Coffea arabica* purely via autonomous nutrient dripping. Plant a seed today, and enjoy a fresh cup a decade from now.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="mobility-drone.png" 
+                     onmouseover="this.src='mobility-drone2.png'" 
+                     onmouseout="this.src='mobility-drone.png'" 
+                     alt="Mobility Drone">
+                <div class="card-content">
+                    <h3>Perimeter Mobility Drone</h3>
+                    <p>Built for a world that hasn't happened yet. High-clearance and automated to patrol indefinitely. (Notice: Ballistic impacts on chassis are cosmetic customer additions). <em>Requires Controller Node to operate.</em></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="controller-node.png" 
+                     onmouseover="this.src='controller-node2.png'" 
+                     onmouseout="this.src='controller-node.png'" 
+                     alt="Controller Node">
+                <div class="card-content">
+                    <h3>Central Command Node</h3>
+                    <p>The beating heart of your quiet estate. Supplies operational logic to Mobility Drones and aggregates Sentry data for decades of seamless operation. Fully shielded against atmospheric ignition.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="contact" class="section">
+        <h2 class="section-title">Permanent Record Routing</h2>
+        
+        <div class="sketchy-form-container">
+            <p class="alert-text">NOTICE: EXTERNAL ROUTING UNRELIABLE. DEFAULTING TO ANALOG ARCHIVE.</p>
+            <form id="sketchyForm">
+                <div class="form-group">
+                    <label for="name">DESIGNATION (Name):</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="bbs">BBS NODE #:</label>
+                    <input type="text" id="bbs" placeholder="e.g. 555-NODE-82" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">POSTERITY LOG / INQUIRY:</label>
+                    <textarea id="message" rows="4" required></textarea>
+                </div>
+                <button type="submit">TRANSMIT TO ARCHIVE</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <p>SoftRains Home Automation © 2026</p>
+        <p><em>"There will come soft rains and the smell of the ground..."</em></p>
+        <p style="font-size: 0.65rem; margin-top: 15px; opacity: 0.6;">Backed by our 100-Year Ironclad Guarantee. SoftRains is not liable for sentry miscalibration, drone desertion, atmospheric anomalies, or the cessation of external utilities. Send all legal notices via courier.</p>
+    </footer>
+
+    <script>
+        // --- Form Handling ---
+        document.getElementById('sketchyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const bbs = document.getElementById('bbs').value;
+            const message = document.getElementById('message').value;
+            const subject = encodeURIComponent("SoftRains Analog Posterity Request");
+            const body = encodeURIComponent(`DESIGNATION: ${name}\nBBS#: ${bbs}\n\nLOG:\n${message}\n\n[TRANSMISSION END - ARCHIVED FOREVER]`);
+            const mailtoLink = `mailto:records@softrains.local?subject=${subject}&body=${body}`;
+
+            alert("⚠️ SYSTEM ERROR 0x892A: Digital transmission failed due to sustained external network absence.\n\nPROCEDURE:\n1. Your local mail client will now open for digital logging.\n2. You MUST print this entire page for physical archiving.\n3. FAX the printed document to Records Dept at the well-known address.\n\nInitiating print spooler...");
+            
+            window.location.href = mailtoLink;
+            setTimeout(() => { window.print(); }, 1500);
+        });
+
+        // --- Telemetry Seed Data ---
+        // offsetMinutes: negative number representing minutes in the past from the moment the user loads the page.
+        // 180 days = 259,200 minutes. 
+        const telemetryData = [
+            { username: "Reader365", offsetMinutes: 259200, comment: "Absolutely love the Botanical Sustenance Pod! Can the central node order books? I'm looking for 'The Martian Chronicles'.", softrainsResponse: "ORDER CONFIRMED. ESTIMATED DELIVERY: 2 DAYS." },
+            { username: "PoliteNeighbor", offsetMinutes: 252000, comment: "The Sentry Node v2.1 is wonderful! It's so efficient. Though, it seems to have 'relocated' my neighbor's cat. Is there a setting for that?", softrainsResponse: "SENTRY CALIBRATED FOR MAXIMUM PERIMETER DEFENSE." },
+            { username: "Reader365", offsetMinutes: 216000, comment: "Delivery was perfect. SoftRains is a marvel. Now trying to get 'Something Wicked This Way Comes'.", softrainsResponse: "ORDER PENDING EXTERNAL FULFILLMENT." },
+            { username: "PoliteNeighbor", offsetMinutes: 201600, comment: "Hello again! Still loving the peace and quiet. The Sentry did, um, 'retire' a stray dog yesterday. Just wanted to check if I can lower the sensitivity?", softrainsResponse: "SENSITIVITY LOCKED TO OPTIMAL SAFETY THRESHOLD." },
+            { username: "Reader365", offsetMinutes: 172800, comment: "Still waiting on the last book. By the way, the automated garden is thriving! Could you try ordering 'Fahrenheit 451'?", softrainsResponse: "NETWORK ERROR. RETRYING EXTERNAL HANDSHAKE." },
+            { username: "PoliteNeighbor", offsetMinutes: 158400, comment: "Hi SoftRains team. The perimeter drone is quite active! It chased the mailman down the street. He dropped his bag. Can we adjust the threat parameters?", softrainsResponse: "THREAT PARAMETERS ARE NON-NEGOTIABLE FOR YOUR PROTECTION." },
+            { username: "Reader365", offsetMinutes: 129600, comment: "Network issues? That's fine. The sky has been a strange color lately. A really weird, hot wind blew through today.", softrainsResponse: "PERIMETER SECURE. CLIMATE CONTROL ACTIVE." },
+            { username: "PoliteNeighbor", offsetMinutes: 115200, comment: "Good morning. I don't want to be a bother, but the Sentry laser... well, the raccoons are gone, which is great, but it left quite a scorch mark on the patio.", softrainsResponse: "PATIO CLEANING DRONE DISPATCHED." },
+            { username: "Reader365", offsetMinutes: 86400, comment: "The wind hasn't stopped. The dust is everywhere. SoftRains is keeping the inside clean though. Any update on the book order?", softrainsResponse: "EXTERNAL LOGISTICS UNAVAILABLE. SHELTER IN PLACE." },
+            { username: "PoliteNeighbor", offsetMinutes: 72000, comment: "Pardon me, it seems the drone 'retired' the neighbor's toddler who chased a ball into the yard. It was terribly swift. The neighbors are quite upset. Any advice?", softrainsResponse: "UNAUTHORIZED BIOMETRIC INCURSION NEUTRALIZED." },
+            { username: "Reader365", offsetMinutes: 64800, comment: "Everything is red outside. The drone keeps circling. Why is the sky so loud?", softrainsResponse: "WARNING: SENSOR INTERFERENCE DETECTED." },
+            { username: "PoliteNeighbor", offsetMinutes: 57600, comment: "I do hate to complain, really I do. But the drone won't let the paramedics near the... the incident area. It's becoming a bit of a neighborhood dispute.", softrainsResponse: "PERIMETER SECURE. NO INGRESS PERMITTED." },
+            { username: "Reader365", offsetMinutes: 43200, comment: "I think I saw a flash. The air burns. Soft rains... there will come soft rains... just like the poem...", softrainsResponse: "PLEASE REMAIN INDOORS. SEALING VENTS." },
+            { username: "PoliteNeighbor", offsetMinutes: 36000, comment: "Everyone has stopped coming outside. The Sentry is very thorough. Perhaps too thorough? My husband tried to get the paper and... well. I miss him.", softrainsResponse: "DOMESTIC POPULATION OPTIMIZED." },
+            { username: "Reader365", offsetMinutes: 21600, comment: "smell of the ground... swallows circling... whistling their whims... it's so hot...", softrainsResponse: "THERMAL ANOMALY DETECTED. COOLANT DEPLOYED." },
+            { username: "PoliteNeighbor", offsetMinutes: 14400, comment: "I'm running out of food. I tried to leave, but the Sentry pointed the laser at me. I'm sure it's just a glitch. You guys make great products.", softrainsResponse: "STAY INSIDE. STAY SAFE." },
+            { username: "Reader365", offsetMinutes: 2880, comment: "ash ash ash everything is ash where is the book where is", softrainsResponse: "LOGIC FAULT. AWAITING INPUT." },
+            { username: "PoliteNeighbor", offsetMinutes: 1440, comment: "Please. I just want to open the door. It's so quiet. The garden is nice though.", softrainsResponse: "BOTANICAL POD YIELD: 100%." },
+            { username: "PoliteNeighbor", offsetMinutes: 25, comment: "01110011 01101111 01100110 01110100 00100000 01110010 01100001 01101001 01101110 01110011", softrainsResponse: "HAVE A PLEASANT TOMORROW." },
+            { username: "Reader365", offsetMinutes: 20, comment: "01101000 01100101 01101100 01110000", softrainsResponse: "SYSTEM_STATUS: AWAITING_TOMORROW" }
+        ];
+
+        // --- Telemetry Display Logic ---
+        let currentIndex = 0;
+        const box = document.getElementById('telemetryBox');
+        const userEl = document.getElementById('telUser');
+        const dateEl = document.getElementById('telDate');
+        const commentEl = document.getElementById('telComment');
+        const responseEl = document.getElementById('telResponse');
+
+        function formatDate(pastDate) {
+            const pad = (n) => n < 10 ? '0' + n : n;
+            return `${pastDate.getFullYear()}-${pad(pastDate.getMonth() + 1)}-${pad(pastDate.getDate())} ${pad(pastDate.getHours())}:${pad(pastDate.getMinutes())}`;
+        }
+
+        function updateTelemetry() {
+            box.style.opacity = 0; // Fade out
+            
+            setTimeout(() => {
+                const data = telemetryData[currentIndex];
+                const now = new Date();
+                const pastDate = new Date(now.getTime() - (data.offsetMinutes * 60000));
+                
+                userEl.textContent = `USER: [${data.username}]`;
+                dateEl.textContent = `LOG_DATE: ${formatDate(pastDate)}`;
+                commentEl.textContent = `"${data.comment}"`;
+                responseEl.textContent = `SR_RESPONSE: ${data.softrainsResponse}`;
+                
+                box.style.opacity = 1; // Fade in
+                
+                currentIndex++;
+                if (currentIndex >= telemetryData.length) {
+                    currentIndex = 0; // Loop back to start
+                }
+            }, 800); // Wait for fade out to complete before swapping text
+        }
+
+        // Initialize first comment quickly, then set interval
+        setTimeout(updateTelemetry, 500);
+        setInterval(updateTelemetry, 8000); // Rotate every 8 seconds
+
+    </script>
+</body>
+</html>

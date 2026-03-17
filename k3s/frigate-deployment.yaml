@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate
+  namespace: softrains
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frigate
+  template:
+    metadata:
+      labels:
+        app: frigate
+    spec:
+      containers:
+      - name: frigate
+        image: ghcr.io/blakeblackshear/frigate:stable
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        env:
+        - name: FRIGATE_RTSP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: softrains-secrets
+              key: FRIGATE_RTSP_PASSWORD
+        - name: PLUS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: softrains-secrets
+              key: PLUS_API_KEY
+        ports:
+        - name: api
+          containerPort: 8971
+          hostPort: 8971
+          protocol: TCP
+        - name: rtsp
+          containerPort: 8554
+          hostPort: 8554
+          protocol: TCP
+        - name: webrtc-tcp
+          containerPort: 8555
+          hostPort: 8555
+          protocol: TCP
+        - name: webrtc-udp
+          containerPort: 8555
+          hostPort: 8555
+          protocol: UDP
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: frigate-config
+          mountPath: /config
+        - name: frigate-media
+          mountPath: /media/frigate
+        - name: frigate-cache
+          mountPath: /tmp/cache
+        - name: dev-usb
+          mountPath: /dev/bus/usb
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: frigate-config
+        hostPath:
+          path: /opt/frigate/config
+          type: Directory
+      - name: frigate-media
+        hostPath:
+          path: /opt/frigate/media
+          type: Directory
+      - name: dev-usb
+        hostPath:
+          path: /dev/bus/usb
+          type: Directory
+      - name: frigate-cache
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1000Mi
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frigate
+  namespace: softrains
+spec:
+  selector:
+    app: frigate
+  ports:
+  - name: api
+    port: 8971
+    targetPort: 8971
+    protocol: TCP
+  - name: rtsp
+    port: 8554
+    targetPort: 8554
+    protocol: TCP
+  - name: webrtc-tcp
+    port: 8555
+    targetPort: 8555
+    protocol: TCP
+  - name: webrtc-udp
+    port: 8555
+    targetPort: 8555
+    protocol: UDP
+  type: ClusterIP

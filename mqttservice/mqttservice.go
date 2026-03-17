@@ -16,9 +16,12 @@ import (
 	"github.com/mochi-mqtt/server/v2/listeners"
 )
 
+// MQTTService is the main struct; configuration is loaded from config/softrains.json
 type MQTTService struct {
-	ID      string `json:"ID"`
-	Address string `json:"Address"`
+	ID      				string `json:"ID"`
+	Address 				string `json:"Address"`
+	SaveAIExtractions     	bool   `json:"SaveAIExtractions"`
+	SaveAIExtractionsPath 	string `json:"SaveAIExtractionsPath"`
 }
 
 func (mqt MQTTService) Start() error {
@@ -48,6 +51,8 @@ func (mqt MQTTService) Start() error {
 	// Add custom hook (SoftRainsHook) to the server
 	err = server.AddHook(new(SoftRainsHook), &SoftRainsHookOptions{
 		Server: server,
+		AIExtractionsPath: mqt.SaveAIExtractionsPath,
+		SaveAIExtractions: mqt.SaveAIExtractions,
 	})
 
 	if err != nil {

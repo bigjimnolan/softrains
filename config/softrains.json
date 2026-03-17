@@ -276,7 +276,9 @@
   "LogLevel": "trace",
   "MQTTService": {
     "Address": ":1884",
-    "ID": "softrains-mqtt"
+    "ID": "softrains-mqtt",
+    "SaveAIExtractions": true,
+    "SaveAIExtractionsPath": "/app/softrains_ai_extractions.log"
   },
   "UIService": {
     "ActionsPath": "/app/config/actions.json",

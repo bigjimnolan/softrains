@@ -136,13 +136,16 @@ const parser = new DOMParser();
 
 let map;
 let houselayer;
+let zoneCameraData = {}; // zone coordinate data from cameras.json
 // --- Custom Legend and Overlay Toggle ---
 let coveragePolygons = [];
+let activationPolygons = [];
 let coverageVisible = true;
+let lastDevicesSnapshot = '';
 
 // --- JWT Authentication for cam2hub.local:8971 ---
 const CAM2HUB_HOST = 'https://cam2hub.local:8971';
-const CAM2HUB_PROXY_HOST = '/api/cam2hub';
+const CAM2HUB_PROXY_HOST = '/proxy';
 const JWT_STORAGE_KEY = 'cam2hub_jwt_token';
 
 // Get stored JWT token
@@ -150,228 +153,23 @@ function getStoredJWT() {
   return localStorage.getItem(JWT_STORAGE_KEY);
 }
 
+// Check if JWT token exists (check for frigate_token cookie)
+function hasFrigateAuth() {
+  // Check sessionStorage flag set by login modal (frigate_token is HttpOnly, so we track auth state on client)
+  return sessionStorage.getItem('frigate_authenticated') === 'true';
+}
+
 // Check if JWT token exists and is valid
 async function ensureJWTToken() {
-  const token = getStoredJWT();
-  if (token) {
+  if (hasFrigateAuth()) {
     return true;
   }
   // Show login modal if no token
-  await showLoginModal();
-  return getStoredJWT() !== null;
-}
-
-// Show login modal
-async function showLoginModal() {
-  return new Promise((resolve) => {
-    const modal = document.createElement('div');
-    modal.id = 'cam2hub-login-modal';
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-    `;
-
-    const modalContent = document.createElement('div');
-    modalContent.style.cssText = `
-      background-color: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 400px;
-    `;
-
-    const title = document.createElement('h2');
-    title.textContent = 'Camera Service Login';
-    title.style.marginTop = '0';
-
-    const userLabel = document.createElement('label');
-    userLabel.textContent = 'Username:';
-    userLabel.style.display = 'block';
-    userLabel.style.marginBottom = '8px';
-    userLabel.style.fontWeight = 'bold';
-
-    const userInput = document.createElement('input');
-    userInput.type = 'text';
-    userInput.placeholder = 'Enter username';
-    userInput.style.cssText = `
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 14px;
-    `;
-
-    const passLabel = document.createElement('label');
-    passLabel.textContent = 'Password:';
-    passLabel.style.display = 'block';
-    passLabel.style.marginBottom = '8px';
-    passLabel.style.fontWeight = 'bold';
-
-    const passInput = document.createElement('input');
-    passInput.type = 'password';
-    passInput.placeholder = 'Enter password';
-    passInput.style.cssText = `
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 14px;
-    `;
-
-    const errorMsg = document.createElement('div');
-    errorMsg.style.cssText = `
-      color: #d32f2f;
-      margin-bottom: 16px;
-      display: none;
-      font-size: 14px;
-    `;
-
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.gap = '8px';
-
-    const loginBtn = document.createElement('button');
-    loginBtn.textContent = 'Login';
-    loginBtn.style.cssText = `
-      flex: 1;
-      padding: 10px;
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-    `;
-    loginBtn.addEventListener('mouseenter', () => {
-      loginBtn.style.backgroundColor = '#1976D2';
-    });
-    loginBtn.addEventListener('mouseleave', () => {
-      loginBtn.style.backgroundColor = '#2196F3';
-    });
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.style.cssText = `
-      flex: 1;
-      padding: 10px;
-      background-color: #f44336;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-    `;
-    cancelBtn.addEventListener('mouseenter', () => {
-      cancelBtn.style.backgroundColor = '#d32f2f';
-    });
-    cancelBtn.addEventListener('mouseleave', () => {
-      cancelBtn.style.backgroundColor = '#f44336';
-    });
-
-    buttonContainer.appendChild(loginBtn);
-    buttonContainer.appendChild(cancelBtn);
-
-    modalContent.appendChild(title);
-    modalContent.appendChild(userLabel);
-    modalContent.appendChild(userInput);
-    modalContent.appendChild(passLabel);
-    modalContent.appendChild(passInput);
-    modalContent.appendChild(errorMsg);
-    modalContent.appendChild(buttonContainer);
-
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
-
-    const closeModal = () => {
-      modal.remove();
-    };
-
-    loginBtn.addEventListener('click', async () => {
-      const username = userInput.value.trim();
-      const password = passInput.value.trim();
-
-      if (!username || !password) {
-        errorMsg.textContent = 'Please enter both username and password';
-        errorMsg.style.display = 'block';
-        return;
-      }
-
-      loginBtn.disabled = true;
-      loginBtn.textContent = 'Logging in...';
-
-      try {
-        const response = await fetch(`${CAM2HUB_PROXY_HOST}/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user: username,
-            password: password,
-          }),
-          credentials: 'include',
-        });
-
-        if (response.ok) {
-          // The JWT is set as a cookie by the server
-          closeModal();
-          resolve();
-        } else {
-          errorMsg.textContent = 'Login failed. Please check your credentials.';
-          errorMsg.style.display = 'block';
-          loginBtn.disabled = false;
-          loginBtn.textContent = 'Login';
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-        errorMsg.textContent = 'An error occurred. Please try again.';
-        errorMsg.style.display = 'block';
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Login';
-      }
-    });
-
-    cancelBtn.addEventListener('click', () => {
-      closeModal();
-      resolve();
-    });
-
-    userInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') passInput.focus();
-    });
-
-    passInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') loginBtn.click();
-    });
-
-    userInput.focus();
-  });
+  await showFrigateLoginModal();
+  return hasFrigateAuth();
 }
 
 async function initMap() {
-  /* 3d
- 
-    const map = new Map3DElement({
-        center: { lat: 37.7704, lng: -122.3985, altitude: 500 },
-        tilt: 67.5,
-        mode: 'HYBRID'
-    });
-    */
   const { Map3DElement } = await google.maps.importLibrary("maps3d");
   const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
   const { LatLngAltitude } = await google.maps.importLibrary("core");
@@ -385,29 +183,34 @@ async function initMap() {
 
   document.getElementById('map').appendChild(map);
 
-
-  // Add points from houselayers.json and overlay detection data from cameras.json
   try {
-    // Fetch camera overlay points from JSON
+    // Fetch houselayer data from JSON
     const resp = await fetch('/static/mapdata/houselayer.json');
     if (!resp.ok) throw new Error('Failed to fetch houselayer.json');
     houselayer = await resp.json();
+    if (!houselayer || !houselayer.cameras || typeof houselayer.cameras !== 'object') {
+      throw new Error('Invalid houselayer.json format: expected { cameras: {...}, devices: {...} }');
+    }
+    const mapCameraData = houselayer.cameras;
+    softrainsData.cameras = mapCameraData;
 
-    // Fetch detection data from cameras.json
-    let detectionData = {};
+    // Load zone coordinate data from cameras.json (zone-to-camera mapping is in houselayer.zones)
     try {
-      const camResp = await fetch('/static/mapdata/cameras.json');
-      if (camResp.ok) {
-        detectionData = await camResp.json();
-        softrainsData.cameras = detectionData.cameras; // make globally available for debugging
+      const zoneResp = await fetch('/static/mapdata/cameras.json');
+      if (zoneResp.ok) {
+        const zoneConfig = await zoneResp.json();
+        zoneCameraData = (zoneConfig && zoneConfig.cameras) ? zoneConfig.cameras : {};
       }
     } catch (e) {
-      console.warn('Could not load cameras.json for detection overlays:', e);
+      console.warn('Could not load cameras.json zone coordinates:', e);
     }
 
-    // Use 3D markers for each camera
     const { Marker3DElement, PinElement } = await google.maps.importLibrary('maps3d');
-    Object.values(houselayer).forEach(pt => {
+
+    // Render cameras (if using new structure with cameras object)
+    const cameraData = mapCameraData;
+    Object.values(cameraData).forEach(pt => {
+      if (!pt || typeof pt.lat !== 'number' || typeof pt.lng !== 'number') return;
       // Use a custom SVG pin for each camera
       const pinSvgString = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="16" fill="#2196F3"></rect><circle cx="16" cy="16" r="8" fill="#fff"/></svg>`;
       const pinSvg = parser.parseFromString(pinSvgString, 'image/svg+xml').documentElement;
@@ -446,14 +249,124 @@ async function initMap() {
         coveragePolygons.push(poly3d);
       }
     });
+
+    // Render devices as 1-meter opaque cubes
+    if (houselayer.devices) {
+      const { Polygon3DElement, Polygon3DInteractiveElement, AltitudeMode } = google.maps.maps3d;
+      const { ElevationService } = await google.maps.importLibrary("elevation");
+      const elevationService = new ElevationService();
+
+      for (const [deviceId, device] of Object.entries(houselayer.devices)) {
+        if (!device.lat || !device.lng) continue;
+
+        // Get ground elevation for this location
+        let groundElevation = 0;
+        try {
+          const result = await elevationService.getElevationForLocations({
+            locations: [{ lat: device.lat, lng: device.lng }]
+          });
+          if (result.results && result.results[0]) {
+            groundElevation = result.results[0].elevation;
+          }
+        } catch (e) {
+          console.warn(`Failed to get elevation for device ${deviceId}:`, e);
+        }
+
+        const cubeSize = 0.000009; // approximately 1 meter in degrees at this latitude
+        const baseAltitude = groundElevation + 1; // 1 meter above ground
+        const topAltitude = baseAltitude + 1; // 1 meter tall cube
+
+        // Create cube vertices
+        const lat = device.lat;
+        const lng = device.lng;
+
+        // Bottom square at 1m above ground
+        const bottomSquare = [
+          { lat: lat - cubeSize, lng: lng - cubeSize, altitude: baseAltitude },
+          { lat: lat - cubeSize, lng: lng + cubeSize, altitude: baseAltitude },
+          { lat: lat + cubeSize, lng: lng + cubeSize, altitude: baseAltitude },
+          { lat: lat + cubeSize, lng: lng - cubeSize, altitude: baseAltitude },
+          { lat: lat - cubeSize, lng: lng - cubeSize, altitude: baseAltitude }
+        ];
+
+        // Top square at 2m above ground
+        const topSquare = [
+          { lat: lat - cubeSize, lng: lng - cubeSize, altitude: topAltitude },
+          { lat: lat - cubeSize, lng: lng + cubeSize, altitude: topAltitude },
+          { lat: lat + cubeSize, lng: lng + cubeSize, altitude: topAltitude },
+          { lat: lat + cubeSize, lng: lng - cubeSize, altitude: topAltitude },
+          { lat: lat - cubeSize, lng: lng - cubeSize, altitude: topAltitude }
+        ];
+
+        const cubeColor = "#FF9800"; // Orange for devices
+        const polygonOptions = {
+          strokeColor: cubeColor + "FF",
+          strokeWidth: 2,
+          fillColor: cubeColor + "CC", // Opaque
+          drawsOccludedSegments: true,
+          extruded: true,
+          altitudeMode: AltitudeMode.ABSOLUTE
+        };
+
+        // Draw bottom face (non-interactive)
+        const bottomFace = new Polygon3DElement(polygonOptions);
+        bottomFace.path = bottomSquare;
+        map.append(bottomFace);
+
+        // Draw top face (interactive for hover)
+        const topFace = new Polygon3DInteractiveElement(polygonOptions);
+        topFace.path = topSquare;
+        map.append(topFace);
+
+        // Add click event to show device name
+        topFace.addEventListener('gmp-click', function () {
+          const { PopoverElement } = google.maps.maps3d;
+          const popover = new PopoverElement({
+            open: true,
+            positionAnchor: { lat: lat, lng: lng, altitude: topAltitude + 0.5 },
+          });
+
+          const html = `
+            <div style="background:white;padding:8px 12px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+              <strong>${deviceId}</strong>
+            </div>
+          `;
+
+          popover.append(parser.parseFromString(html, 'text/html').body.firstChild);
+          map.append(popover);
+        });
+
+        // Draw 4 vertical faces (non-interactive)
+        for (let i = 0; i < 4; i++) {
+          const verticalFace = new Polygon3DElement(polygonOptions);
+          verticalFace.path = [
+            bottomSquare[i],
+            bottomSquare[i + 1],
+            topSquare[i + 1],
+            topSquare[i],
+            bottomSquare[i]
+          ];
+          map.append(verticalFace);
+        }
+      }
+    }
+
     addCustomLegend();
-    getDeviceActivations();
+    redrawDeviceActivations();
+    lastDevicesSnapshot = JSON.stringify((softrainsData && softrainsData.devices) || {});
+    setInterval(refreshDeviceActivationsFromApi, 15000);
   } catch (e) {
-    console.error('Failed to load or parse houselayers.json or detection data:', e);
+    console.error('Failed to load or parse houselayer.json or detection data:', e);
   }
 }
 
-initMap();
+async function initMapWithAuth() {
+  // Ensure user is authenticated with Frigate before loading map
+  await ensureJWTToken();
+  await initMap();
+}
+
+initMapWithAuth();
 
 
 function addCustomLegend() {
@@ -493,14 +406,8 @@ function addCustomLegend() {
     sliderValue.textContent = `${minutes} min`;
     window.activationTimeRangeMinutes = minutes;
     // Re-render device activations
-    if (typeof getDeviceActivations === 'function') {
-      // Remove old polygons (for 3D polygons, remove from map)
-      coveragePolygons.forEach(poly => {
-        if (poly.remove) poly.remove();
-        else if (poly.setMap) poly.setMap(null);
-      });
-      coveragePolygons = [];
-      getDeviceActivations();
+    if (typeof redrawDeviceActivations === 'function') {
+      redrawDeviceActivations();
     }
   });
   // For maps3d, append legendDiv to the map container
@@ -572,8 +479,8 @@ function getTriggerTypesFromActions(actions) {
 }
 
 function getDeviceIcon(device) {
-  if (device.LaastTrigger.TriggerZone && zoneIcons.length) {
-    const idx = zoneIcons.findIndex(z => z.name === device.LaastTrigger.TriggerZone);
+  if (device.LastTrigger.TriggerZone && zoneIcons.length) {
+    const idx = zoneIcons.findIndex(z => z.name === device.LastTrigger.TriggerZone);
     if (idx !== -1) return zoneIcons[idx].icon;
   }
   // fallback
@@ -595,7 +502,8 @@ function getZoneAngularOffsets(coords, fov = 140) {
 }
 
 function getDeviceActivations() {
-  Object.values(softrainsData.devices).forEach(device => {
+  const devices = (softrainsData && softrainsData.devices) ? softrainsData.devices : {};
+  Object.values(devices).forEach(device => {
     // for each device find out where it was last activated and by what
     let maxX = 0;
     let minX = 1;
@@ -609,14 +517,23 @@ function getDeviceActivations() {
 
     // Find which camera has this zone    
     const camera = getCameraFromZone(device.LastTrigger.TriggerZone);
-    const cameraCoords = houselayer[camera];
     if (camera === null) {
       console.log('No camera found for zone', device.LastTrigger.TriggerZone);
       return;
     }
+    const cameraCoords =
+      (houselayer && houselayer.cameras && houselayer.cameras[camera]) ||
+      (softrainsData && softrainsData.cameras && softrainsData.cameras[camera]);
+    if (!cameraCoords || cameraCoords.lat == null || cameraCoords.lng == null) {
+      console.log('No camera coordinates found for', camera);
+      return;
+    }
 
-    // This is part of more direct mapping of target to zone coordinates
-    const coords = softrainsData.cameras[camera].zones[device.LastTrigger.TriggerZone].coordinates.split(',').map(Number);
+    // Look up zone coordinates from cameras.json zone data
+    const zone = zoneCameraData[camera]?.zones?.[device.LastTrigger.TriggerZone];
+    if (!zone || typeof zone.coordinates !== 'string') return;
+    const coords = zone.coordinates.split(',').map(Number);
+    if (!coords.length) return;
     for (let i = 0; i < coords.length; i += 2) {
       const x = coords[i];
       if (x > maxX) maxX = x;
@@ -624,10 +541,46 @@ function getDeviceActivations() {
     }
     const angleOffsets = getZoneAngularOffsets([minX, 0, maxX, 0]);
 
-    timeAgo = cleanUpTimeAgo(device.LastTrigger.TriggerTime);
+    const timeAgo = cleanUpTimeAgo(device.LastTrigger.TriggerTime);
 
     drawDeviceActivationZones(angleOffsets, cameraCoords, device, timeAgo);
   });
+}
+
+function clearActivationPolygons() {
+  activationPolygons.forEach(poly => {
+    if (poly.remove) poly.remove();
+    else if (poly.setMap) poly.setMap(null);
+  });
+  activationPolygons = [];
+}
+
+function redrawDeviceActivations() {
+  clearActivationPolygons();
+  getDeviceActivations();
+}
+
+async function refreshDeviceActivationsFromApi() {
+  try {
+    const response = await fetch('/api?command=getAll');
+    if (!response.ok) return;
+    const data = await response.json();
+    if (!data || typeof data !== 'object' || !data.devices) return;
+
+    const nextSnapshot = JSON.stringify(data.devices);
+    if (nextSnapshot === lastDevicesSnapshot) return;
+
+    softrainsData = {
+      ...(softrainsData || {}),
+      ...data,
+      cameras: (softrainsData && softrainsData.cameras) || data.cameras || {}
+    };
+
+    lastDevicesSnapshot = nextSnapshot;
+    redrawDeviceActivations();
+  } catch (e) {
+    console.warn('Failed to refresh map activations:', e);
+  }
 }
 
 function cleanUpTimeAgo(triggerDate) {
@@ -646,12 +599,7 @@ function cleanUpTimeAgo(triggerDate) {
 }
 
 function getCameraFromZone(zoneName) {
-  for (const [camName, camData] of Object.entries(softrainsData.cameras)) {
-    if (camData.zones && zoneName in camData.zones) {
-      return camName;
-    }
-  }
-  return null;
+  return (houselayer && houselayer.zones && houselayer.zones[zoneName]) || null;
 }
 
 function drawDeviceActivationZones(angleOffsets, cameraCoords, device, timeAgo = '') {
@@ -677,7 +625,12 @@ function drawDeviceActivationZones(angleOffsets, cameraCoords, device, timeAgo =
   const poly3d = new Polygon3DInteractiveElement(polygonOptions);
   poly3d.path = arcPath;
   map.append(poly3d);
+  if (!coverageVisible) {
+    if (poly3d.remove) poly3d.remove();
+    else if (poly3d.setMap) poly3d.setMap(null);
+  }
   coveragePolygons.push(poly3d);
+  activationPolygons.push(poly3d);
 
   // Add hover event for popup with zone and detection type icons, and time only
   if (device && device.LastTrigger) {
@@ -685,9 +638,6 @@ function drawDeviceActivationZones(angleOffsets, cameraCoords, device, timeAgo =
     // Declare infoMarker once per device activation zone
     let infoMarker = null;
     poly3d.addEventListener('gmp-click', async function () {
-      // Ensure JWT token is available before making API calls
-      await ensureJWTToken();
-
       // Use the last point in arcPath as the endpoint
       const endpoint = arcPath[arcPath.length - 1];
       // Change stroke color randomly
@@ -695,32 +645,38 @@ function drawDeviceActivationZones(angleOffsets, cameraCoords, device, timeAgo =
       poly3d.strokeColor = colors[Math.floor(Math.random() * colors.length)];
 
       // Build info popup content with raw values
-      let zoneIcon = '';
-      let typeIcon = '';
       const zoneName = device.LastTrigger.TriggerZone;
       const triggerType = device.LastTrigger.TriggerType;
-      let rawZoneIcon = zoneName;
-      let rawTypeIcon = triggerType;
+      let zoneIcon = '';
+      let typeIcon = '';
+
+      // Try to get zone icon from localStorage preferences
       if (zoneIcons.length) {
         const z = zoneIcons.find(z => z.name.indexOf(zoneName) > -1);
         if (z) zoneIcon = z.icon;
-        typeIcon = ICONS[triggerType] || triggerType;
       }
-      if (!zoneIcon) zoneIcon = '📷';
-      if (!typeIcon) typeIcon = '⚡';
+      if (!zoneIcon) zoneIcon = '📍'; // map pin for zone
+
+      // Get trigger type icon from ICONS object
+      typeIcon = ICONS[triggerType] || '❓'; // Use the actual icon or question mark if not found
+
+      const rawZoneIcon = zoneName;
+      const rawTypeIcon = triggerType;
 
       let snapshotUrl = '';
       if (device.LastTrigger && device.LastTrigger.TriggerID) {
         snapshotUrl = `${CAM2HUB_PROXY_HOST}/snapshot?eventId=${device.LastTrigger.TriggerID}`;
       }
       const html = `
-        <div style="min-width:100px;display:flex;align-items:center;gap:8px;font-size:1.6em;flex-direction:column;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span title="${rawZoneIcon}">${zoneIcon}</span>
-            <span title="${rawTypeIcon}">${typeIcon}</span>
-            <span style="font-size:0.8em;">${timeAgo}</span>
+        <div class="event-popup-container">
+          <div class="event-popup-header">
+            <div class="event-icons">
+              <span class="event-zone-icon" title="Zone: ${rawZoneIcon}">${zoneIcon}</span>
+              <span class="event-type-icon" title="Type: ${rawTypeIcon}">${typeIcon}</span>
+            </div>
+            <span class="event-time">${timeAgo}</span>
           </div>          
-          ${snapshotUrl ? `<img src='${snapshotUrl}' style='margin-top:8px;max-width:180px;max-height:120px;border-radius:6px;border:1px solid #ccc;' />` : ''}
+          ${snapshotUrl ? `<img src='${snapshotUrl}' class="event-snapshot" />` : ''}
         </div>
       `;
 

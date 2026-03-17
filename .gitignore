@@ -5,3 +5,8 @@ config/actions.json
 houselayer*
 mapdata/
 config
+heat*html
+softrains*.log
+test/*
+client_test/*
+softrains

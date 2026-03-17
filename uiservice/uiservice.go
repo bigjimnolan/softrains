@@ -19,6 +19,7 @@ import (
 type UIService struct {
 	Actions          []hubitatservice.ActionInput
 	Devices          map[string]hubitatservice.HubitatDeviceInfo
+	Cameras          map[string]interface{}
 	ActionsPath      string
 	ConfigPath       string
 	ServerKeyPath    string
@@ -42,10 +43,11 @@ func (ui *UIService) Start() error {
 	// Start update channel listener
 	ui.loadActions()
 	ui.loadDevices()
+	ui.loadCameras()
 
 	// Start the update listener in a separate goroutine
 	go ui.listenForUpdates()
-	
+
 	ui.authPassword = os.Getenv("SOFTRAINS_AUTH_PASSWORD")
 	ui.GoogleMapsAPIKey = os.Getenv("GOOGLE_MAPS_API_KEY")
 	http.HandleFunc("/", ui.loginHandler)
@@ -53,16 +55,27 @@ func (ui *UIService) Start() error {
 	// Serve static content without authentication
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(ui.WebFolderDocRoot+"static"))))
 
+	// Serve sales page content without authentication.
+	http.HandleFunc("/salespage", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, ui.WebFolderDocRoot+"salespage/index.html")
+	})
+	http.Handle("/salespage/", http.StripPrefix("/salespage/", http.FileServer(http.Dir(ui.WebFolderDocRoot+"salespage"))))
+
 	// Proxy routes for cam2hub service (CORS-enabled) - MUST be before /api route
-	http.HandleFunc("/api/cam2hub/login", ui.cam2hubLoginProxy)
-	http.HandleFunc("/api/cam2hub/snapshot", ui.cam2hubSnapshotProxy)
+	http.HandleFunc("/proxy/login", ui.cam2hubLoginProxy)
+	http.HandleFunc("/proxy/snapshot", ui.cam2hubSnapshotProxy)
 
 	// Auth-protected routes
 	http.HandleFunc("/dashboard", ui.authMiddleware(ui.dashboardHandler))
 	http.HandleFunc("/maps", ui.authMiddleware(ui.mapsHandler))
+	http.HandleFunc("/heatmap", ui.authMiddleware(ui.heatmapHandler))
+	http.HandleFunc("/detectionvectors", ui.authMiddleware(ui.detectionVectorsHandler))
 	http.HandleFunc("/api", ui.authMiddleware(ui.apiHandler))
 	http.HandleFunc("/action", ui.authMiddleware(ui.actionHandler))
 	http.HandleFunc("/device", ui.authMiddleware(ui.deviceHandler))
+
+	// Public API routes (no auth required)
+	http.HandleFunc("/api/extractions", ui.extractionsHandler)
 
 	// TLS checks and server setup
 	if _, err := os.Stat(ui.ServerCertPath); err != nil {
@@ -97,10 +110,16 @@ func (ui *UIService) mapsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error marshaling devices", http.StatusInternalServerError)
 		return
 	}
+	camerasJSON, err := json.Marshal(ui.Cameras)
+	if err != nil {
+		http.Error(w, "Error marshaling cameras", http.StatusInternalServerError)
+		return
+	}
 
 	err = tmpl.Execute(w, map[string]interface{}{
 		"ActionsJSON":      template.JS(actionsJSON), // Mark as JS-safe
 		"DevicesJSON":      template.JS(devicesJSON), // Mark as JS-safe
+		"CamerasJSON":      template.JS(camerasJSON), // Mark as JS-safe
 		"GoogleMapsAPIKey": ui.GoogleMapsAPIKey,
 	})
 	if err != nil {
@@ -148,10 +167,16 @@ func (ui *UIService) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error marshaling devices", http.StatusInternalServerError)
 		return
 	}
+	camerasJSON, err := json.Marshal(ui.Cameras)
+	if err != nil {
+		http.Error(w, "Error marshaling cameras", http.StatusInternalServerError)
+		return
+	}
 
 	err = tmpl.Execute(w, map[string]interface{}{
 		"ActionsJSON": template.JS(actionsJSON), // Mark as JS-safe
 		"DevicesJSON": template.JS(devicesJSON), // Mark as JS-safe
+		"CamerasJSON": template.JS(camerasJSON), // Mark as JS-safe
 	})
 	if err != nil {
 		http.Error(w, "Error rendering dashboard", http.StatusInternalServerError)
@@ -192,6 +217,7 @@ func (ui *UIService) apiHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
+		log.Info().Msgf("[ApiHandler]Got Invalid Method: %v", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
@@ -323,6 +349,7 @@ func (ui *UIService) actionHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Action deleted"))
 	default:
+		log.Info().Msgf("[ActionHandler]Got Invalid Method: %v", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
@@ -413,6 +440,7 @@ func (ui *UIService) deviceHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Device deleted"))
 	default:
+		log.Info().Msgf("[DeviceHandler]Got Invalid Method: %v", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
@@ -443,7 +471,7 @@ func (ui *UIService) saveActions() error {
 		return err
 	}
 	return os.Rename(tmpPath, ui.ActionsPath)
-	
+
 }
 
 func (ui *UIService) loadDevices() error {
@@ -466,6 +494,36 @@ func (ui *UIService) loadDevices() error {
 	return nil
 }
 
+func (ui *UIService) loadCameras() error {
+	// Try to load cameras from the static mapdata directory
+	camerasPath := ui.WebFolderDocRoot + "mapdata/cameras.json"
+	data, err := os.ReadFile(camerasPath)
+	if err != nil {
+		// If file doesn't exist, just initialize empty cameras
+		log.Warn().Msgf("Could not load cameras from %s: %v", camerasPath, err)
+		ui.Cameras = make(map[string]interface{})
+		return nil
+	}
+
+	var camerasData map[string]interface{}
+	err = json.Unmarshal(data, &camerasData)
+	if err != nil {
+		log.Error().Msgf("Error parsing cameras JSON: %v", err)
+		ui.Cameras = make(map[string]interface{})
+		return err
+	}
+
+	// If the JSON has a top-level "cameras" key, extract it
+	if cameras, ok := camerasData["cameras"]; ok {
+		ui.Cameras = cameras.(map[string]interface{})
+	} else {
+		ui.Cameras = camerasData
+	}
+
+	log.Debug().Msgf("Loaded %d cameras", len(ui.Cameras))
+	return nil
+}
+
 func (ui *UIService) saveDevices() error {
 	data, err := os.ReadFile(ui.ConfigPath)
 	if err != nil {
@@ -478,8 +536,7 @@ func (ui *UIService) saveDevices() error {
 	hc, ok := config["HubitatConfig"].(map[string]interface{})
 	if !ok {
 		return err
-	}Connection to 192.168.68.91 closed.
-bigjim@bigjim:~/Repos$ ssh officepi 
+	}
 
 	devicesIface := make(map[string]interface{}, len(ui.Devices))
 	for k, v := range ui.Devices {
@@ -498,8 +555,7 @@ bigjim@bigjim:~/Repos$ ssh officepi
 	err = os.WriteFile(tmpPath, out, 0644)
 	if err != nil {
 		return err
-	}Connection to 192.168.68.91 closed.
-bigjim@bigjim:~/Repos$ ssh officepi 
+	}
 
 	return os.Rename(tmpPath, ui.ConfigPath)
 }
@@ -631,6 +687,7 @@ func (ui *UIService) listenForUpdates() {
 
 // cam2hubLoginProxy forwards login requests to cam2hub service with CORS headers
 func (ui *UIService) cam2hubLoginProxy(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msgf("[LoginProxy] Received %s request to %s", r.Method, r.URL.Path)
 	// Set CORS headers
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -639,16 +696,13 @@ func (ui *UIService) cam2hubLoginProxy(w http.ResponseWriter, r *http.Request) {
 
 	// Handle preflight requests
 	if r.Method == "OPTIONS" {
-		w.WriteHeader(httConnection to 192.168.68.91 closed.
-bigjim@bigjim:~/Repos$ ssh officepi 
-p.StatusOK)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	// Only allow POST
-	if r.Method != "POST"Connection to 192.168.68.91 closed.
-bigjim@bigjim:~/Repos$ ssh officepi 
- {
+	if r.Method != "POST" {
+		log.Info().Msgf("[LoginProxy]Got Invalid Method: %v", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -669,9 +723,9 @@ bigjim@bigjim:~/Repos$ ssh officepi
 		Timeout: 10 * time.Second,
 	}
 
-	// Forward request to cam2hub service
+	// Forward request to frigate service on the docker network
 	bodyBytes, _ := json.Marshal(loginBody)
-	proxyReq, err := http.NewRequest("POST", "https://cam2hub.local:8971/login", bytes.NewBuffer(bodyBytes))
+	proxyReq, err := http.NewRequest("POST", "https://frigate-softrains:8971/api/login", bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		log.Error().Msgf("Error creating proxy request: %v", err)
 		http.Error(w, "Proxy error", http.StatusInternalServerError)
@@ -688,6 +742,8 @@ bigjim@bigjim:~/Repos$ ssh officepi
 	}
 	defer resp.Body.Close()
 
+	log.Info().Msgf("[LoginProxy] Frigate responded with status %d", resp.StatusCode)
+
 	// Copy response headers (excluding Content-Length to let Go recalculate)
 	for key, values := range resp.Header {
 		for _, value := range values {
@@ -698,6 +754,7 @@ bigjim@bigjim:~/Repos$ ssh officepi
 	// Copy cookies from cam2hub response
 	for _, cookie := range resp.Cookies() {
 		// Store the JWT cookie but modify path/domain if needed
+		log.Debug().Msgf("[LoginProxy] Setting cookie: %s", cookie.Name)
 		cookie.Path = "/"
 		cookie.Domain = ""
 		http.SetCookie(w, cookie)
@@ -705,7 +762,12 @@ bigjim@bigjim:~/Repos$ ssh officepi
 
 	// Write response status and body
 	w.WriteHeader(resp.StatusCode)
-	json.NewEncoder(w).Encode(loginBody)
+	n, err := io.Copy(w, resp.Body)
+	if err != nil {
+		log.Error().Msgf("[LoginProxy] Error copying frigate response body: %v", err)
+	} else {
+		log.Info().Msgf("[LoginProxy] Successfully copied %d bytes from frigate", n)
+	}
 }
 
 // cam2hubSnapshotProxy forwards snapshot requests to cam2hub service
@@ -723,6 +785,7 @@ func (ui *UIService) cam2hubSnapshotProxy(w http.ResponseWriter, r *http.Request
 
 	// Only allow GET
 	if r.Method != "GET" {
+		log.Info().Msgf("[SnapshotProxy]Got Invalid Method: %v", r.Method)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -742,8 +805,8 @@ func (ui *UIService) cam2hubSnapshotProxy(w http.ResponseWriter, r *http.Request
 		Timeout: 10 * time.Second,
 	}
 
-	// Build the cam2hub snapshot URL
-	snapshotURL := "https://cam2hub.local:8971/api/events/" + eventID + "/snapshot.jpg"
+	// Build the frigate snapshot URL on the docker network
+	snapshotURL := "https://frigate-softrains:8971/api/events/" + eventID + "/snapshot.jpg"
 
 	// Create and send the request
 	proxyReq, err := http.NewRequest("GET", snapshotURL, nil)
@@ -776,3 +839,46 @@ func (ui *UIService) cam2hubSnapshotProxy(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// Serve heatmap.html from templates directory (no dynamic template data required)
+func (ui *UIService) heatmapHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(ui.WebFolderDocRoot + "templates/heatmap.html"))
+
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "Error rendering heatmap", http.StatusInternalServerError)
+		log.Error().Msgf("Error rendering heatmap: %v", err)
+		return
+	}
+
+	log.Debug().Msg("Heatmap rendered")
+}
+
+// Serve detectionvectors.html from templates directory (no dynamic template data required)
+func (ui *UIService) detectionVectorsHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles(ui.WebFolderDocRoot + "templates/detectionvectors.html"))
+
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "Error rendering detection vectors", http.StatusInternalServerError)
+		log.Error().Msgf("Error rendering detection vectors: %v", err)
+		return
+	}
+
+	log.Debug().Msg("Detection vectors rendered")
+}
+
+// Serve AI extractions log as plain text
+func (ui *UIService) extractionsHandler(w http.ResponseWriter, r *http.Request) {
+	extractionsPath := "/app/softrains_ai_extractions.log"
+
+	// Check if file exists
+	if _, err := os.Stat(extractionsPath); os.IsNotExist(err) {
+		http.Error(w, "Extractions log not found", http.StatusNotFound)
+		log.Warn().Msg("Extractions log file not found")
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	http.ServeFile(w, r, extractionsPath)
+	log.Debug().Msg("Extractions log served")
+}
